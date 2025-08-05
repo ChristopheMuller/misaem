@@ -33,7 +33,7 @@
 #' @export
 
 
-miss.glm.model.select = function(Y, X, seed=NA){
+miss.glm.old.model.select = function(Y, X, seed=NA){
 
   if (!is.na(seed))
     set.seed(seed)

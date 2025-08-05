@@ -7,7 +7,7 @@
 #' @examples
 #' ## For examples see example(miss.glm)
 #' @export
-print.summary.miss.glm <-
+print.summary.miss.glm.old <-
   function (x, digits = max(3L, getOption("digits") - 3L), ...)
   {
     cat("\nCall:\n",
