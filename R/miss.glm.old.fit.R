@@ -15,7 +15,7 @@
 #' @examples
 #' ## For examples see example(miss.glm)
 
-miss.glm.fit <- function (x, y,
+miss.glm.old.fit <- function (x, y,
           control = list())
 
 {

@@ -12,13 +12,13 @@
 #' ## For examples see example(miss.glm)
 #' @export
 
-summary.miss.glm <- function (object, ...){
+summary.miss.glm.old <- function (object, ...){
 
   coef.table <- matrix(, 0L, 2L)
   dimnames(coef.table) <- list(NULL, c("Estimate", "Std. Error"))
   coef.table <- cbind(Estimate = object$coefficients, `Std. Error` = object$s.err)
   ans <- list(coefficients = coef.table, loglikelihood = object$ll, call=object$call, formula=object$formula)
-  class(ans) <- "summary.miss.glm"
+  class(ans) <- "summary.miss.glm.old"
 
   return(ans)
 }

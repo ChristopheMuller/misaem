@@ -50,7 +50,7 @@
 #' print(miss.prob)
 #' @export
 
-predict.miss.glm <- function(object, newdata = NULL, seed = NA, method='map', ...)
+predict.miss.glm.old <- function(object, newdata = NULL, seed = NA, method='map', ...)
 {
   if (!is.na(seed))
     set.seed(seed)

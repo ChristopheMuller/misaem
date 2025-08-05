@@ -44,7 +44,7 @@
 #' summary(miss.list)$coef
 #' @export
 
-miss.glm <- function (formula,  data,
+miss.glm.old <- function (formula,  data,
                  control = list(...), ...
 )
 {
@@ -71,10 +71,10 @@ miss.glm <- function (formula,  data,
     model.matrix(mt, mf)
   else matrix(,NROW(Y), 0L)
 
-  fit <- eval(call('miss.glm.fit',
+  fit <- eval(call('miss.glm.old.fit',
                    x = X, y = Y,
                    control = control))
   fit <- c(fit, list(call = call, formula = formula))
-  class(fit) <- "miss.glm"
+  class(fit) <- "miss.glm.old"
   return(fit)
 }
