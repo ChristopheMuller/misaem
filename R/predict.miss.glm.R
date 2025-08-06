@@ -122,12 +122,13 @@ predict.miss.glm <- function(object, newdata = NULL, seed = NA, method='map', mc
           sigma22 = sig2.saem[obs_col, obs_col, drop = FALSE]
           sigma21 = sig2.saem[obs_col, miss_col, drop = FALSE]
 
-          solve_term_1 = solve(sigma22, t(sigma12))
-          sigma_cond = sigma11 - sigma12 %*% solve_term_1
-          
-          x2 = X.test[rows_with_pattern, obs_col, drop = FALSE]
-          solve_term_2 = t(solve(sigma22, t(x2 - mu2)))
-          mu_cond = mu1 + solve_term_2 %*% t(sigma12)
+          inv_sigma22 = solve(sigma22)
+          inv_sigma22_sigma21 = inv_sigma22 %*% sigma21
+
+          sigma_cond = sigma11 - sigma12 %*% inv_sigma22_sigma21
+          mu_cond_diff = sigma12 %*% inv_sigma22 %*% t(x2 - mu2)
+          mu_cond = mu1 + mu_cond_diff
+          mu_cond = t(mu_cond)
 
           x1_samples_list = apply(mu_cond, 1, function(row_mu) {
                 rmvnorm(n = mc.size, mean = row_mu, sigma = sigma_cond)
