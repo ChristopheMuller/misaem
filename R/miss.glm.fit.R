@@ -160,7 +160,7 @@ miss.glm.fit <- function (x, y,
       }
 
       if(print_iter==TRUE & k %% 50 == 0){
-        cat(sprintf('%i ', k, '...'))
+        cat(sprintf('%i... ', k))
       }
     }
     var_obs = ll = std_obs =NULL
