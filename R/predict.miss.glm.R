@@ -126,10 +126,7 @@ predict.miss.glm <- function(object, newdata = NULL, seed = NA, method='map', mc
           inv_sigma22_sigma21 = inv_sigma22 %*% sigma21
 
           sigma_cond = sigma11 - sigma12 %*% inv_sigma22_sigma21
-<<<<<<< HEAD
           x2 = X.test[rows_with_pattern, obs_col, drop = FALSE]
-=======
->>>>>>> 7be1dc195f14f4e09cdfb8fddeba70ad894cf08c
           mu_cond_diff = sigma12 %*% inv_sigma22 %*% t(x2 - mu2)
           mu_cond = mu1 + mu_cond_diff
           mu_cond = t(mu_cond)
