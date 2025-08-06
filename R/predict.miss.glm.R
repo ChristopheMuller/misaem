@@ -9,7 +9,7 @@
 #' @param ... Further arguments passed to or from other methods.
 #' @return
 #' \item{pr.saem}{The prediction result for logistic regression: the probability of response y=1.}
-#' @import mvtnorm stats MASS
+#' @import mvtnorm stats MASS abind
 #' @importFrom methods is
 #' @examples
 #' # Generate dataset
