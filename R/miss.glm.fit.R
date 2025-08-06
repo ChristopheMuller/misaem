@@ -100,6 +100,12 @@ miss.glm.fit <- function (x, y,
      if(print_iter==TRUE){
       cat(sprintf('Iteration of SAEM: \n'))
     }
+
+    patterns_mat <- is.na(x)
+    pattern_ids <- apply(patterns_mat, 1, paste, collapse = "_")
+    unique_patterns <- unique(patterns_mat, MARGIN = 1)
+    unique_ids <- apply(unique_patterns, 1, paste, collapse = "_")
+
     while ((cstop>tol_em)*(k<maxruns)|(k<20)){
       k = k+1
       beta.old = beta
@@ -108,39 +114,67 @@ miss.glm.fit <- function (x, y,
 
       S.inv <- solve(Sigma)
 
-      for (i in (1:n)) {
-        jna <- which(is.na(x[i,]))
+      for (i in 1:nrow(unique_patterns)) {
+        patt <- unique_patterns[i, ]
+        jna <- which(patt)
         njna <- length(jna)
-        if (njna>0) {
-          xi <- X.sim[i,]
-          Oi <- solve(S.inv[jna,jna])
-          mi <- mu[jna]
-          lobs <- beta[1]
-          if (njna<p) {
-            jobs <- setdiff(1:p,jna)
-            mi <- mi - (xi[jobs] - mu[jobs])%*%S.inv[jobs,jna]%*%Oi
-            lobs <- lobs + sum(xi[jobs]*beta[jobs+1])
-          }
 
-          cobs <- exp(lobs)
-          if(cobs==0){cobs=.Machine$double.xmin}
-          if(cobs==Inf){cobs=.Machine$double.xmax}
-
-          xina <- xi[jna]
-          betana <- beta[jna+1]
-          for (m in (1:nmcmc)) {
-            xina.c <- mi + rnorm(njna)%*%chol(Oi)
-
-            if (y[i]==1)
-              alpha <- (1+exp(-sum(xina*betana))/cobs)/(1+exp(-sum(xina.c*betana))/cobs)
-            else
-              alpha <- (1+exp(sum(xina*betana))*cobs)/(1+exp(sum(xina.c*betana))*cobs)
-            if (runif(1) < alpha){
-              xina <- xina.c
-            }
-          }
-          X.sim[i,jna] <- xina
+        if (njna == 0) {
+          next
         }
+
+        id <- unique_ids[i]
+        rows_with_pattern <- which(pattern_ids == id)
+        n_pattern <- length(rows_with_pattern)
+
+        jobs <- which(!patt)
+        
+        S.inv_MM <- S.inv[jna, jna, drop = FALSE]
+        Oi <- solve(S.inv_MM)
+        chol_Oi <- chol(Oi)
+
+        if (njna < p) {
+          X_obs <- X.sim[rows_with_pattern, jobs, drop = FALSE]
+          S.inv_MO <- S.inv[jna, jobs, drop = FALSE]
+          
+          delta_X <- t(X_obs) - mu[jobs]
+          adjustment <- t(Oi %*% S.inv_MO %*% delta_X)
+          
+          mi <- matrix(mu[jna], nrow = n_pattern, ncol = njna, byrow = TRUE) - adjustment
+          lobs <- beta[1] + X_obs %*% beta[jobs + 1]
+        } else {
+          mi <- matrix(mu[jna], nrow = n_pattern, ncol = njna, byrow = TRUE)
+          lobs <- rep(beta[1], n_pattern)
+        }
+
+        cobs <- exp(lobs)
+        cobs[cobs == 0] <- .Machine$double.xmin
+        cobs[cobs == Inf] <- .Machine$double.xmax
+
+        xina <- X.sim[rows_with_pattern, jna, drop = FALSE]
+        betana <- beta[jna + 1]
+        y_pattern <- y[rows_with_pattern]
+        is_y1 <- (y_pattern == 1)
+
+        for (m in 1:nmcmc) {
+          rand_norm <- matrix(rnorm(n_pattern * njna), nrow = n_pattern, ncol = njna)
+          xina.c <- mi + rand_norm %*% chol_Oi
+
+          current_logit <- xina %*% betana
+          candidate_logit <- xina.c %*% betana
+
+          ratio_y1 <- (1 + exp(-current_logit) / cobs) / (1 + exp(-candidate_logit) / cobs)
+          ratio_y0 <- (1 + exp(current_logit) * cobs) / (1 + exp(candidate_logit) * cobs)
+          
+          alpha <- ifelse(is_y1, ratio_y1, ratio_y0)
+          
+          accepted <- runif(n_pattern) < alpha
+          if (any(accepted)) {
+            xina[accepted, ] <- xina.c[accepted, , drop = FALSE]
+          }
+        }
+        X.sim[rows_with_pattern, jna] <- xina
+
       }
       beta_new= rep(0,p+1)
       beta_new[c(1,subsets+1)]= glm(y~ X.sim[,subsets],family=binomial(link='logit'))$coef
