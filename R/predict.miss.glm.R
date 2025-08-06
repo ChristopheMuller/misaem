@@ -5,6 +5,7 @@
 #' @param newdata a data frame in which to look for variables with which to predict. It can contain missing values.
 #' @param seed  An integer as a seed set for the random generator.
 #' @param method The name of method to deal with missing values in test set. It can be 'map'(maximum a posteriori) or 'impute' (imputation by conditional expectation). Default is 'map'.
+#' @param mc.size The number of Monte Carlo samples to use when method is 'map'. Default is 100.
 #' @param ... Further arguments passed to or from other methods.
 #' @return
 #' \item{pr.saem}{The prediction result for logistic regression: the probability of response y=1.}
