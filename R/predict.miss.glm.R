@@ -52,123 +52,123 @@
 #' @export
 
 predict.miss.glm <- function(object, newdata = NULL, seed = NA, method = 'map', mc.size = 100, ...) {
- if (!is.na(seed))
+if (!is.na(seed))
   set.seed(seed)
 
- X.test <- newdata
- mu.saem <- object$mu.X
- sig2.saem <- object$Sig.X
- beta.saem <- object$coef
+X.test <- newdata
+mu.saem <- object$mu.X
+sig2.saem <- object$Sig.X
+beta.saem <- object$coef
 
- if (is(X.test, "data.frame")) {
+if (is(X.test, "data.frame")) {
   X.test <- as.matrix(X.test)
- }
- if (method == "MAP" | method == "Map") {
+}
+if (method == "MAP" | method == "Map") {
   method <- "map"
- }
- if (method == "Impute" | method == "IMPUTE") {
+}
+if (method == "Impute" | method == "IMPUTE") {
   method <- "impute"
- }
+}
 
- rindic <- as.matrix(is.na(X.test))
- p <- ncol(X.test)
+rindic <- as.matrix(is.na(X.test))
+p <- ncol(X.test)
 
- if (sum(rindic) != 0) {
+if (sum(rindic) != 0) {
   if (method == 'impute') {
-   for (i in 1:dim(X.test)[1]) {
-    if (sum(rindic[i, ]) != 0) {
-     miss_col <- which(rindic[i, ] == TRUE)
-     obs_col <- which(rindic[i, ] == FALSE)
-     x2 <- X.test[i, obs_col]
-     mu1 <- mu.saem[miss_col]
-     mu2 <- mu.saem[obs_col]
-     sigma11 <- sig2.saem[miss_col, miss_col, drop = FALSE]
-     sigma12 <- sig2.saem[miss_col, obs_col, drop = FALSE]
-     sigma22 <- sig2.saem[obs_col, obs_col, drop = FALSE]
+    for (i in 1:dim(X.test)[1]) {
+      if (sum(rindic[i, ]) != 0) {
+        miss_col <- which(rindic[i, ] == TRUE)
+        obs_col <- which(rindic[i, ] == FALSE)
+        x2 <- X.test[i, obs_col]
+        mu1 <- mu.saem[miss_col]
+        mu2 <- mu.saem[obs_col]
+        sigma11 <- sig2.saem[miss_col, miss_col, drop = FALSE]
+        sigma12 <- sig2.saem[miss_col, obs_col, drop = FALSE]
+        sigma22 <- sig2.saem[obs_col, obs_col, drop = FALSE]
 
-     mu_cond <- mu1 + sigma12 %*% solve(sigma22) %*% (x2 - mu2)
-     X.test[i, miss_col] <- mu_cond
+        mu_cond <- mu1 + sigma12 %*% solve(sigma22) %*% (x2 - mu2)
+        X.test[i, miss_col] <- mu_cond
+      }
     }
-   }
-   tmp <- cbind(1, X.test) %*% beta.saem
-   pr.saem <- 1 / (1 + exp(-tmp))
+  tmp <- cbind(1, X.test) %*% beta.saem
+  pr.saem <- 1 / (1 + exp(-tmp))
 
   } else if (method == 'map') {
 
-   patterns <- unique(rindic)
-   pr.saem <- rep(0, nrow(X.test))
+    patterns <- unique(rindic)
+    pr.saem <- rep(0, nrow(X.test))
 
-   log_reg <- function(x, beta) {
-    1 / (1 + exp(-(x %*% beta)))
-   }
-
-   for (i in 1:nrow(patterns)) {
-    pattern <- patterns[i, ]
-    rows_with_pattern <- which(apply(rindic, 1, function(x) all(x == pattern)))
-    n_pattern <- length(rows_with_pattern)
-
-    if (sum(pattern) == 0) {
-     x_subset <- X.test[rows_with_pattern, , drop = FALSE]
-     x_with_intercept <- cbind(1, x_subset)
-     probs <- log_reg(x = x_with_intercept, beta = beta.saem)
-     pr.saem[rows_with_pattern] <- probs
-    } else {
-     miss_col <- which(pattern)
-     obs_col <- which(!pattern)
-     n_missing <- length(miss_col)
-
-     if (length(obs_col) == 0) {
-      mu_cond <- matrix(rep(mu.saem, n_pattern), nrow = n_pattern, byrow = TRUE)
-      sigma_cond <- sig2.saem
-     } else {
-      mu1 <- mu.saem[miss_col]
-      mu2 <- mu.saem[obs_col]
-      sigma11 <- sig2.saem[miss_col, miss_col, drop = FALSE]
-      sigma12 <- sig2.saem[miss_col, obs_col, drop = FALSE]
-      sigma22 <- sig2.saem[obs_col, obs_col, drop = FALSE]
-      sigma21 <- sig2.saem[obs_col, miss_col, drop = FALSE]
-
-      inv_sigma22 <- solve(sigma22)
-      sigma_cond <- sigma11 - sigma12 %*% inv_sigma22 %*% sigma21
-      
-      x2 <- X.test[rows_with_pattern, obs_col, drop = FALSE]
-      x2_centered <- sweep(x2, 2, mu2, "-")
-      
-      mu_cond_diff <- sigma12 %*% inv_sigma22 %*% t(x2_centered)
-      mu_cond <- t(mu1 + mu_cond_diff)
-     }
-
-     x1_raw_matrix <- apply(mu_cond, 1, function(row_mu) {
-      mvtnorm::rmvnorm(n = mc.size, mean = row_mu, sigma = sigma_cond)
-     })
-     
-     x1_all <- array(x1_raw_matrix, dim = c(mc.size, n_missing, n_pattern))
-
-     x_imputed_array <- array(0, dim = c(n_pattern, p, mc.size))
-     if (length(obs_col) > 0) {
-      x_imputed_array[, obs_col, ] <- X.test[rows_with_pattern, obs_col, drop = FALSE]
-     }
-     x1_permuted <- aperm(x1_all, c(3, 2, 1))
-     x_imputed_array[, miss_col, ] <- x1_permuted
-
-     x_imputed_reshaped <- aperm(x_imputed_array, c(1, 3, 2))
-     x_imputed_flat <- matrix(x_imputed_reshaped, nrow = n_pattern * mc.size, ncol = p)
-
-     x_imputed_with_intercept <- cbind(1, x_imputed_flat)
-     
-     probs <- log_reg(x = x_imputed_with_intercept, beta = beta.saem)
-     probs_matrix <- matrix(probs, nrow = n_pattern, ncol = mc.size, byrow = TRUE)
-     
-     pr.saem[rows_with_pattern] <- rowMeans(probs_matrix)
+    log_reg <- function(x, beta) {
+      1 / (1 + exp(-(x %*% beta)))
     }
-   }
-   pr.saem <- as.matrix(pr.saem)
+
+    for (i in 1:nrow(patterns)) {
+      pattern <- patterns[i, ]
+      rows_with_pattern <- which(apply(rindic, 1, function(x) all(x == pattern)))
+      n_pattern <- length(rows_with_pattern)
+
+      if (sum(pattern) == 0) {
+        x_subset <- X.test[rows_with_pattern, , drop = FALSE]
+        x_with_intercept <- cbind(1, x_subset)
+        probs <- log_reg(x = x_with_intercept, beta = beta.saem)
+        pr.saem[rows_with_pattern] <- probs
+      } else {
+        miss_col <- which(pattern)
+        obs_col <- which(!pattern)
+        n_missing <- length(miss_col)
+
+        if (length(obs_col) == 0) {
+            mu_cond <- matrix(rep(mu.saem, n_pattern), nrow = n_pattern, byrow = TRUE)
+            sigma_cond <- sig2.saem
+        } else {
+          mu1 <- mu.saem[miss_col]
+          mu2 <- mu.saem[obs_col]
+          sigma11 <- sig2.saem[miss_col, miss_col, drop = FALSE]
+          sigma12 <- sig2.saem[miss_col, obs_col, drop = FALSE]
+          sigma22 <- sig2.saem[obs_col, obs_col, drop = FALSE]
+          sigma21 <- sig2.saem[obs_col, miss_col, drop = FALSE]
+
+          inv_sigma22 <- solve(sigma22)
+          sigma_cond <- sigma11 - sigma12 %*% inv_sigma22 %*% sigma21
+          
+          x2 <- X.test[rows_with_pattern, obs_col, drop = FALSE]
+          x2_centered <- sweep(x2, 2, mu2, "-")
+          
+          mu_cond_diff <- sigma12 %*% inv_sigma22 %*% t(x2_centered)
+          mu_cond <- t(mu1 + mu_cond_diff)
+        }
+
+        x1_raw_matrix <- lapply(1:nrow(mu_cond), function(i) {
+          mvtnorm::rmvnorm(n=mc.size, mean=mu_cond[i,], sigma=sigma_cond)
+        })
+    
+        x1_all <- simplify2array(x1_raw_matrix)
+        x1_all <- aperm(x1_all, c(3, 2, 1))
+
+        x_imputed_array <- array(0, dim = c(n_pattern, p, mc.size))
+        if (length(obs_col) > 0) {
+          x_imputed_array[, obs_col, ] <- X.test[rows_with_pattern, obs_col, drop = FALSE]
+        }
+        x_imputed_array[, miss_col, ] <- x1_all # dim = n_pattern x p x mc.size
+
+        vector.of.ones <- matrix(1, nrow = n_pattern, ncol = mc.size)
+        x_imputed_array <- abind::abind(vector.of.ones, x_imputed_array, along = 2)
+
+        temp <- aperm(x_imputed_array, c(1,3,2)) #dim = n_pattern x mc.size x (p+1)
+        pr.saem_temp <- apply(temp, c(1, 2), function(x) log_reg(x, beta.saem)) #dim = n_pattern x mc.size
+        pr.saem_temp <- rowMeans(pr.saem_temp) #dim = n_pattern
+
+        pr.saem[rows_with_pattern] <- pr.saem_temp
+      
+      }
+    }
+    pr.saem <- as.matrix(pr.saem)
   } else {
    stop("Error: Method must be 'map' or 'impute'.")
   }
- } else {
-  tmp <- cbind(1, X.test) %*% beta.saem
-  pr.saem <- 1 / (1 + exp(-tmp))
- }
- return(pr.saem)
+  } else {
+    tmp <- cbind(1, X.test) %*% beta.saem
+    pr.saem <- 1 / (1 + exp(-tmp))
+  }
+  return(pr.saem)
 }
