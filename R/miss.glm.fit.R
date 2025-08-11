@@ -15,107 +15,93 @@
 #' @examples
 #' ## For examples see example(miss.glm)
 
-miss.glm.fit <- function (x, y,
-          control = list())
-
-{
+miss.glm.fit <- function (x, y, control = list()) {
   control <- do.call("miss.glm.control", control)
   xnames <- dimnames(x)[[2L]]
-  x = as.matrix(x[,-1])
+  x <- as.matrix(x[,-1])
 
-  maxruns = control$maxruns
-  tol_em = control$tol_em
-  nmcmc = control$nmcmc
-  tau = control$tau
-  k1 = control$k1
-  seed = control$seed
-  print_iter = control$print_iter
-  var_cal = control$var_cal
-  ll_obs_cal = control$ll_obs_cal
-  subsets = control$subsets
+  maxruns <- control$maxruns
+  tol_em <- control$tol_em
+  nmcmc <- control$nmcmc
+  tau <- control$tau
+  k1 <- control$k1
+  seed <- control$seed
+  print_iter <- control$print_iter
+  var_cal <- control$var_cal
+  ll_obs_cal <- control$ll_obs_cal
+  subsets <- control$subsets
 
   if (!is.na(seed))
     set.seed(seed)
 
-  p=ncol(x)
+  p <- ncol(x)
 
   if (is.na(subsets[1]))
-    subsets = 1:p
+    subsets <- 1:p
 
-  if (sum(subsets %in% 1:p) < length(subsets))  {
+  if (sum(subsets %in% 1:p) < length(subsets)) {
     stop("Error: index of selected variables must be in the range of covariates.")
   }
-
-  if (length(unique(subsets)) != length(subsets)){
+  if (length(unique(subsets)) != length(subsets)) {
     stop("Error: index of selected variables must not be repeated.")
   }
 
-  #delete rows completely missing
-  if(any(apply(is.na(x),1,sum)==p)){
-    i_allNA=which(apply(is.na(x),1,sum)==p)
-    x = x[-i_allNA,]
-    y = y[-i_allNA]
+  if (any(rowSums(is.na(x)) == p)) {
+    i_allNA <- which(rowSums(is.na(x)) == p)
+    x <- x[-i_allNA, ]
+    y <- y[-i_allNA]
   }
-  if(any((is.na(y))==TRUE)){
-    i_YNA=which(is.na(y)==TRUE)
-    x = x[-i_YNA,]
-    y = y[-i_YNA]
+  if (any(is.na(y))) {
+    i_YNA <- which(is.na(y))
+    x <- x[-i_YNA, ]
+    y <- y[-i_YNA]
   }
 
   if (sum(sapply(x, is.numeric)) < ncol(x)) {
     stop("Error: the variables should be numeric.")
   }
-  if (sum(y==1) +  sum(y==0) < nrow(x)) {
+  if (sum(y == 1) + sum(y == 0) < nrow(x)) {
     stop("Error: y must be coded by 0 or 1, and there is no missing data in y.")
   }
 
-  n=length(y)
+  n <- length(y)
+  rindic <- is.na(x)
+  missingcols <- as.integer(sum(colSums(rindic) > 0))
 
+  if (missingcols > 0) {
+    k <- 0
+    cstop <- 0.1
+    seqbeta <- matrix(NA, nrow = ncol(x) + 1, ncol = (maxruns + 1))
+    seqbeta_avg <- matrix(NA, nrow = ncol(x) + 1, ncol = (maxruns + 1))
 
-  rindic = as.matrix(is.na(x))
-  if(sum(rindic)>0){
-    whichcolmissing = (1:ncol(rindic))[apply(rindic,2,sum)>0]
-    missingcols = length(whichcolmissing)
-  }
-  if(sum(rindic)==0){missingcols=0}
-
-
-  if(missingcols>0){
-    k=0
-    cstop=0.1
-    seqbeta = matrix(NA,nrow=ncol(x)+1,ncol=(maxruns+1))
-    seqbeta_avg = matrix(NA,nrow=ncol(x)+1,ncol=(maxruns+1))
-
-    X.mean = x
-    for(i in 1:ncol(X.mean)){
-      X.mean[is.na(X.mean[,i]), i] <- mean(X.mean[,i], na.rm = TRUE)
+    X.mean <- x
+    for (i in 1:ncol(X.mean)) {
+      X.mean[is.na(X.mean[, i]), i] <- mean(X.mean[, i], na.rm = TRUE)
     }
     X.sim <- X.mean
 
-    mu = apply(X.mean,2,mean)
-    Sigma = var(X.mean)*(n-1)/n
-    beta= rep(0,p+1)
+    mu <- colMeans(X.mean)
+    Sigma <- var(X.mean) * (n - 1) / n
+    beta <- rep(0, p + 1)
     beta[c(1,subsets+1)]= glm(y~ X.mean[,subsets],family=binomial(link='logit'))$coef
 
      if(print_iter==TRUE){
       cat(sprintf('Iteration of SAEM: \n'))
     }
 
-    patterns_mat <- is.na(x)
-    pattern_ids <- apply(patterns_mat, 1, paste, collapse = "_")
-    unique_patterns <- unique(patterns_mat, MARGIN = 1)
-    unique_ids <- apply(unique_patterns, 1, paste, collapse = "_")
+    pattern_ids <- apply(rindic, 1, paste, collapse = "_")
+    grouped_rows <- split(seq_len(n), pattern_ids)
 
-    while ((cstop>tol_em)*(k<maxruns)|(k<20)){
-      k = k+1
-      beta.old = beta
+    while ((cstop > tol_em && k < maxruns) || (k < 20)) {
+      k <- k + 1
+      beta.old <- beta
 
-      if(k <k1){gamma <- 1}else{gamma <- 1/(k-(k1-1))^tau}
+      gamma <- if (k < k1) 1 else 1 / (k - (k1 - 1))^tau
 
-      S.inv <- solve(Sigma)
+      S.inv <- chol2inv(chol(Sigma))
 
-      for (i in 1:nrow(unique_patterns)) {
-        patt <- unique_patterns[i, ]
+      for (rows_with_pattern in grouped_rows) {
+        patt <- rindic[rows_with_pattern[1], ]
         jna <- which(patt)
         njna <- length(jna)
 
@@ -123,23 +109,18 @@ miss.glm.fit <- function (x, y,
           next
         }
 
-        id <- unique_ids[i]
-        rows_with_pattern <- which(pattern_ids == id)
         n_pattern <- length(rows_with_pattern)
-
         jobs <- which(!patt)
-        
+
         S.inv_MM <- S.inv[jna, jna, drop = FALSE]
-        Oi <- solve(S.inv_MM)
+        Oi <- chol2inv(chol(S.inv_MM))
         chol_Oi <- chol(Oi)
 
         if (njna < p) {
           X_obs <- X.sim[rows_with_pattern, jobs, drop = FALSE]
           S.inv_MO <- S.inv[jna, jobs, drop = FALSE]
-          
           delta_X <- t(X_obs) - mu[jobs]
           adjustment <- t(Oi %*% S.inv_MO %*% delta_X)
-          
           mi <- matrix(mu[jna], nrow = n_pattern, ncol = njna, byrow = TRUE) - adjustment
           lobs <- beta[1] + X_obs %*% beta[jobs + 1]
         } else {
@@ -148,8 +129,8 @@ miss.glm.fit <- function (x, y,
         }
 
         cobs <- exp(lobs)
+        cobs[is.infinite(cobs)] <- .Machine$double.xmax
         cobs[cobs == 0] <- .Machine$double.xmin
-        cobs[cobs == Inf] <- 1e100
 
         xina <- X.sim[rows_with_pattern, jna, drop = FALSE]
         betana <- beta[jna + 1]
@@ -162,21 +143,13 @@ miss.glm.fit <- function (x, y,
 
           current_logit <- xina %*% betana
           candidate_logit <- xina.c %*% betana
+          
+          ratio <- exp(current_logit - candidate_logit)
+          ratio[is.infinite(ratio)] <- .Machine$double.xmax
 
-          exp_current_logit <- exp(current_logit)
-          exp_candidate_logit <- exp(candidate_logit)
-          exp_minus_current_logit <- exp(-current_logit)
-          exp_minus_candidate_logit <- exp(-candidate_logit)
-
-          exp_current_logit[exp_candidate_logit == Inf] <- 1e100
-          exp_minus_current_logit[exp_minus_candidate_logit == Inf] <- 1e100
-          exp_candidate_logit[exp_candidate_logit == Inf] <- 1e100
-          exp_minus_candidate_logit[exp_minus_candidate_logit == Inf] <- 1e100
-
-          ratio_y1 <- (1 + exp_minus_current_logit / cobs) / (1 + exp_minus_candidate_logit / cobs)
-          ratio_y0 <- (1 + exp_current_logit * cobs) / (1 + exp_candidate_logit * cobs)
-
-          alpha <- ifelse(is_y1, ratio_y1, ratio_y0)
+          alpha <- ifelse(is_y1, 
+                          (1 + cobs * ratio) / (1 + cobs),
+                          (cobs + ratio) / (cobs + 1))
 
           accepted <- runif(n_pattern) < alpha
           if (any(accepted)) {
@@ -184,26 +157,24 @@ miss.glm.fit <- function (x, y,
           }
         }
         X.sim[rows_with_pattern, jna] <- xina
-
       }
-      beta_new= rep(0,p+1)
-      beta_new[c(1,subsets+1)]= glm(y~ X.sim[,subsets],family=binomial(link='logit'))$coef
+      beta_new <- rep(0,p+1)
+      beta_new[c(1,subsets+1)] <- glm(y~ X.sim[,subsets],family=binomial(link='logit'))$coef
 
       beta <- (1-gamma)*beta + gamma*beta_new
-      cstop = sum((beta-beta.old)^2)
+      cstop <- sum((beta-beta.old)^2)
 
-      mu <- (1-gamma)*mu + gamma*colMeans(X.sim)
-      Sigma <- (1-gamma)*Sigma + gamma*cov(X.sim)
+      mu <- (1 - gamma) * mu + gamma * colMeans(X.sim)
+      Sigma <- (1 - gamma) * Sigma + gamma * (cov(X.sim) * (n - 1) / n)
 
-      seqbeta[,k]=beta.old
-
-      if(k==1){
-        seqbeta_avg[,k]=beta.old
-      }else{
-        seqbeta_avg[,k]= 1/k*rowSums(seqbeta[,1:k])
+      seqbeta[, k] <- beta.old
+      if (k == 1) {
+        seqbeta_avg[, k] <- beta.old
+      } else {
+        seqbeta_avg[, k] <- rowMeans(seqbeta[, 1:k, drop = FALSE])
       }
 
-      if(print_iter==TRUE & k %% 50 == 0){
+      if (print_iter && k %% 50 == 0) {
         cat(sprintf('%i... ', k))
       }
     }
