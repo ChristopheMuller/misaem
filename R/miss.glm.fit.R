@@ -143,13 +143,21 @@ miss.glm.fit <- function (x, y, control = list()) {
 
           current_logit <- xina %*% betana
           candidate_logit <- xina.c %*% betana
-          
-          ratio <- exp(current_logit - candidate_logit)
-          ratio[is.infinite(ratio)] <- .Machine$double.xmax
 
-          alpha <- ifelse(is_y1, 
-                          (1 + cobs * ratio) / (1 + cobs),
-                          (cobs + ratio) / (cobs + 1))
+          exp_current_logit <- exp(current_logit)
+          exp_candidate_logit <- exp(candidate_logit)
+          exp_minus_current_logit <- exp(-current_logit)
+          exp_minus_candidate_logit <- exp(-candidate_logit)
+
+          exp_current_logit[exp_candidate_logit == Inf] <- 1e100
+          exp_minus_current_logit[exp_minus_candidate_logit == Inf] <- 1e100
+          exp_candidate_logit[exp_candidate_logit == Inf] <- 1e100
+          exp_minus_candidate_logit[exp_minus_candidate_logit == Inf] <- 1e100
+
+          ratio_y1 <- (1 + exp_minus_current_logit / cobs) / (1 + exp_minus_candidate_logit / cobs)
+          ratio_y0 <- (1 + exp_current_logit * cobs) / (1 + exp_candidate_logit * cobs)
+
+          alpha <- ifelse(is_y1, ratio_y1, ratio_y0)
 
           accepted <- runif(n_pattern) < alpha
           if (any(accepted)) {
