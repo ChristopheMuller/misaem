@@ -149,7 +149,7 @@ miss.glm.fit <- function (x, y,
 
         cobs <- exp(lobs)
         cobs[cobs == 0] <- .Machine$double.xmin
-        cobs[cobs == Inf] <- .Machine$double.xmax
+        cobs[cobs == Inf] <- 1e100
 
         xina <- X.sim[rows_with_pattern, jna, drop = FALSE]
         betana <- beta[jna + 1]
@@ -163,11 +163,21 @@ miss.glm.fit <- function (x, y,
           current_logit <- xina %*% betana
           candidate_logit <- xina.c %*% betana
 
-          ratio_y1 <- (1 + exp(-current_logit) / cobs) / (1 + exp(-candidate_logit) / cobs)
-          ratio_y0 <- (1 + exp(current_logit) * cobs) / (1 + exp(candidate_logit) * cobs)
-          
+          exp_current_logit <- exp(current_logit)
+          exp_candidate_logit <- exp(candidate_logit)
+          exp_minus_current_logit <- exp(-current_logit)
+          exp_minus_candidate_logit <- exp(-candidate_logit)
+
+          exp_current_logit[exp_candidate_logit == Inf] <- 1e100
+          exp_minus_current_logit[exp_minus_candidate_logit == Inf] <- 1e100
+          exp_candidate_logit[exp_candidate_logit == Inf] <- 1e100
+          exp_minus_candidate_logit[exp_minus_candidate_logit == Inf] <- 1e100
+
+          ratio_y1 <- (1 + exp_minus_current_logit / cobs) / (1 + exp_minus_candidate_logit / cobs)
+          ratio_y0 <- (1 + exp_current_logit * cobs) / (1 + exp_candidate_logit * cobs)
+
           alpha <- ifelse(is_y1, ratio_y1, ratio_y0)
-          
+
           accepted <- runif(n_pattern) < alpha
           if (any(accepted)) {
             xina[accepted, ] <- xina.c[accepted, , drop = FALSE]

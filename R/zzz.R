@@ -88,6 +88,7 @@ louis_lr_saem = function(beta,mu,Sigma,Y,X.obs,pos_var=1:ncol(X.obs),rindic=as.m
         lobs <- lobs + sum(xi[jobs]*beta[jobs+1])
       }
       cobs <- exp(lobs)
+      cobs[cobs == Inf] <- 1e100
       xina <- xi[jna]
       betana <- beta[jna+1]
       for (m in (1:mc.size)) {
