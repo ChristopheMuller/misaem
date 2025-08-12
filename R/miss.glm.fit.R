@@ -65,7 +65,17 @@ miss.glm.fit <- function (x, y, control = list()) {
   }
 
   n <- length(y)
-  rindic <- is.na(x)
+
+  rindic <- as.matrix(is.na(x))
+  if(sum(rindic)>0){
+    whichcolmissing <- (1:ncol(rindic))[apply(rindic,2,sum)>0]
+    missingcols <- length(whichcolmissing)
+  }
+  if(sum(rindic)==0){
+    whichcolmissing <- integer(0)
+    missingcols <- 0
+  }
+
   missingcols <- as.integer(sum(colSums(rindic) > 0))
 
   if (missingcols > 0) {
@@ -192,7 +202,7 @@ miss.glm.fit <- function (x, y, control = list()) {
       std_obs <- sqrt(diag(var_obs))
     }
     if(ll_obs_cal==TRUE){
-      ll= likelihood_saem(beta,mu,Sigma,y,x,rindic,whichcolmissing,mc.size=100)
+      ll = likelihood_saem(beta,mu,Sigma,y,x,rindic,whichcolmissing,mc.size=100)
     }
   }
   if(missingcols==0){
