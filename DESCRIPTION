@@ -1,9 +1,10 @@
 Package: misaem
 Title: Linear Regression and Logistic Regression with Missing Covariates
-Version: 1.0.0
+Version: 1.1.0
 Date: 2020-07-04
-Authors@R: c( person("Wei", "Jiang", email = "wei.jiang@polytechnique.edu", role = c("aut", "cre")),
-              person("Pavlo","Mozharovskyi", role = "ctb", email = "pavlo.mozharovskyi@telecom-paristech.fr"))
+Authors@R: c( person("Wei", "Jiang", role = "aut", email = "wei.jiang@polytechnique.edu"),
+              person("Pavlo","Mozharovskyi", role = "ctb", email = "pavlo.mozharovskyi@telecom-paristech.fr"),
+              person("Christophe", "Muller", role = c("ctb", "cre"), email = "christophe.muller@jesus.ox.ac.uk"))
 Description: Estimate parameters of linear regression and logistic regression with missing covariates with missing data, perform model selection and prediction, using EM-type algorithms.
 Depends: R (>= 3.4.0)
 Encoding: UTF-8
@@ -14,7 +15,8 @@ Imports: mvtnorm,
     MASS,
     mice,
     norm,
-    methods
+    methods,
+    abind
 Suggests: knitr,
     rmarkdown
 LazyData: true
