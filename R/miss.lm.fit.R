@@ -11,7 +11,7 @@
 #' \item{s.err}{Standard error for estimated parameters.}
 #' \item{mu.X}{Estimated \eqn{\mu}{\mu}.}
 #' \item{Sig.X}{Estimated \eqn{\Sigma}{\Sigma}.}
-#' @import norm MASS mice
+#' @import norm MASS
 #' @importFrom methods is
 #' @examples
 #' ## For examples see example(miss.lm)
