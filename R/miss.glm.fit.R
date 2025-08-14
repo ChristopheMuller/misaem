@@ -138,10 +138,6 @@ miss.glm.fit <- function (x, y, control = list()) {
           lobs <- rep(beta[1], n_pattern)
         }
 
-        cobs <- exp(lobs)
-        cobs[is.infinite(cobs)] <- .Machine$double.xmax
-        cobs[cobs == 0] <- .Machine$double.xmin
-
         xina <- X.sim[rows_with_pattern, jna, drop = FALSE]
         betana <- beta[jna + 1]
         y_pattern <- y[rows_with_pattern]
@@ -151,21 +147,26 @@ miss.glm.fit <- function (x, y, control = list()) {
           rand_norm <- matrix(rnorm(n_pattern * njna), nrow = n_pattern, ncol = njna)
           xina.c <- mi + rand_norm %*% chol_Oi
 
-          current_logit <- xina %*% betana
-          candidate_logit <- xina.c %*% betana
+          current_logit <- xina %*% betana + lobs
+          candidate_logit <- xina.c %*% betana + lobs
 
-          exp_current_logit <- exp(current_logit)
-          exp_candidate_logit <- exp(candidate_logit)
-          exp_minus_current_logit <- exp(-current_logit)
-          exp_minus_candidate_logit <- exp(-candidate_logit)
+          num_y1 <- 1 + exp(-current_logit)
+          den_y1 <- 1 + exp(-candidate_logit)
+          ratio_y1 <- num_y1 / den_y1
+          fix_idx_y1 <- is.nan(ratio_y1)
+          if (any(fix_idx_y1)) {
+            delta <- candidate_logit[fix_idx_y1] - current_logit[fix_idx_y1]
+            ratio_y1[fix_idx_y1] <- exp(delta)
+          }
 
-          exp_current_logit[exp_candidate_logit == Inf] <- 1e100
-          exp_minus_current_logit[exp_minus_candidate_logit == Inf] <- 1e100
-          exp_candidate_logit[exp_candidate_logit == Inf] <- 1e100
-          exp_minus_candidate_logit[exp_minus_candidate_logit == Inf] <- 1e100
-
-          ratio_y1 <- (1 + exp_minus_current_logit / cobs) / (1 + exp_minus_candidate_logit / cobs)
-          ratio_y0 <- (1 + exp_current_logit * cobs) / (1 + exp_candidate_logit * cobs)
+          num_y0 <- 1 + exp(current_logit)
+          den_y0 <- 1 + exp(candidate_logit)
+          ratio_y0 <- num_y0 / den_y0
+          fix_idx_y0 <- is.nan(ratio_y0)
+          if (any(fix_idx_y0)) {
+            delta <- current_logit[fix_idx_y0] - candidate_logit[fix_idx_y0]
+            ratio_y0[fix_idx_y0] <- exp(delta)
+          }
 
           alpha <- ifelse(is_y1, ratio_y1, ratio_y0)
 
