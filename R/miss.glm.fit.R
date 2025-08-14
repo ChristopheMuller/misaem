@@ -156,7 +156,9 @@ miss.glm.fit <- function (x, y, control = list()) {
           fix_idx_y1 <- is.nan(ratio_y1)
           if (any(fix_idx_y1)) {
             delta <- candidate_logit[fix_idx_y1] - current_logit[fix_idx_y1]
-            ratio_y1[fix_idx_y1] <- exp(delta)
+            new_ratio <- exp(delta)
+            new_ratio[new_ratio == Inf] <- 1.01
+            ratio_y1[fix_idx_y1] <- new_ratio
           }
 
           num_y0 <- 1 + exp(current_logit)
@@ -165,7 +167,9 @@ miss.glm.fit <- function (x, y, control = list()) {
           fix_idx_y0 <- is.nan(ratio_y0)
           if (any(fix_idx_y0)) {
             delta <- current_logit[fix_idx_y0] - candidate_logit[fix_idx_y0]
-            ratio_y0[fix_idx_y0] <- exp(delta)
+            new_ratio <- exp(delta)
+            new_ratio[new_ratio == Inf] <- 1.01
+            ratio_y0[fix_idx_y0] <- new_ratio
           }
 
           alpha <- ifelse(is_y1, ratio_y1, ratio_y0)
