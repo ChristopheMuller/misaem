@@ -205,6 +205,9 @@ miss.glm.fit <- function (x, y, control = list()) {
     if(var_cal==TRUE){
       var_obs = louis_lr_saem(beta,mu,Sigma,y,x,subsets,rindic,whichcolmissing,mc.size=100)
       std_obs <- sqrt(diag(var_obs))
+      if (any(is.nan(std_obs))){
+        warning("Instabilities in standard errors.")
+      }
     }
     if(ll_obs_cal==TRUE){
       ll = likelihood_saem(beta,mu,Sigma,y,x,rindic,whichcolmissing,mc.size=100)
