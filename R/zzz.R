@@ -93,10 +93,31 @@ louis_lr_saem = function(beta,mu,Sigma,Y,X.obs,pos_var=1:ncol(X.obs),rindic=as.m
       betana <- beta[jna+1]
       for (m in (1:mc.size)) {
         xina.c <- mi + rnorm(njna)%*%chol(Oi)
-        if (Y[i]==1)
-          alpha <- (1+exp(-sum(xina*betana))/cobs)/(1+exp(-sum(xina.c*betana))/cobs)
-        else
-          alpha <- (1+exp(sum(xina*betana))*cobs)/(1+exp(sum(xina.c*betana))*cobs)
+        if (Y[i]==1){
+          num <- 1+exp(-sum(xina*betana))/cobs
+          denum <- (1+exp(-sum(xina.c*betana))/cobs)
+          alpha <- num/denum
+          if (is.nan(alpha)){
+            delta <- -sum(xina*betana) + sum(xina.c*betana)
+            new_ratio <- exp(delta)
+            if (new_ratio == Inf){
+              new_ratio <- 1.01
+            }
+            alpha <- new_ratio
+          }
+        } else {
+          num <- (1+exp(sum(xina*betana))*cobs)
+          denum <- (1+exp(sum(xina.c*betana))*cobs)
+          alpha <- num/denum
+          if (is.nan(alpha)){
+            delta <- sum(xina*betana) - sum(xina.c*betana)
+            new_ratio <- exp(delta)
+            if (new_ratio == Inf){
+              new_ratio <- 1.01
+            }
+            alpha <- new_ratio
+          }
+        }
         if (runif(1) < alpha){
           xina <- xina.c
         }
