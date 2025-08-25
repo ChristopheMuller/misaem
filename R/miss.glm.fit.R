@@ -187,12 +187,8 @@ miss.glm.fit <- function (x, y, control = list()) {
       mu <- (1 - gamma) * mu + gamma * colMeans(X.sim)
       Sigma <- (1 - gamma) * Sigma + gamma * (cov(X.sim) * (n - 1) / n)
 
-      seqbeta[, k] <- beta.old
-      if (k == 1) {
-        seqbeta_avg[, k] <- beta.old
-      } else {
-        seqbeta_avg[, k] <- rowMeans(seqbeta[, 1:k, drop = FALSE])
-      }
+      seqbeta[, k] <- beta_new
+      seqbeta_avg[, k] <- beta.old
 
       if (print_iter && k %% 50 == 0) {
         cat(sprintf('%i... ', k))
