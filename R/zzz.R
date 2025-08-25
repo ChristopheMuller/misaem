@@ -280,6 +280,7 @@ imputeEllP <- function(point, Sigma.inv){
 #' or MICE (Multiple Imputation by Chained Equations) methods.
 #'
 #' @param x A data frame or matrix containing missing values to be initialized.
+#'   If a matrix is provided, it will be converted to a data frame internally.
 #' @param seed An integer value to set the random seed for reproducible results. 
 #'   Only used when method is not "mean".
 #' @param method A character string specifying the initialization method. 
@@ -320,6 +321,12 @@ imputeEllP <- function(point, Sigma.inv){
 #'
 #' @export
 initialize_df <- function(x, seed, method = "mean") {
+  # Convert to data frame if input is a matrix, preserving dimensions
+  if (is.matrix(x)) {
+    x_numeric <- apply(x, 2, as.numeric)
+    x <- as.data.frame(x_numeric)
+  }
+  
   if (method == "mean") {
     X.mean <- x
     for (i in 1:ncol(X.mean)) {
@@ -327,17 +334,26 @@ initialize_df <- function(x, seed, method = "mean") {
     }
     X.sim <- X.mean
   } else {
+    # Check if mice is available
     if (!requireNamespace("mice", quietly = TRUE)) {
       stop("Package 'mice' is required for methods other than 'mean'. Please install it with: install.packages('mice')")
     }
     
+    # Set seed if provided
+    if (!is.na(seed)) {
+      set.seed(seed)
+    }
+    
+    # Try MICE imputation with error handling
     tryCatch({
       mice.model <- mice::mice(x, m = 1, maxit = 50, method = method, 
                                seed = seed, printFlag = FALSE)
       X.sim <- mice::complete(mice.model)
     }, error = function(e) {
+      # Check if error is related to invalid method
       if (grepl("method", e$message, ignore.case = TRUE) || 
           grepl("not found", e$message, ignore.case = TRUE)) {
+        # Get available methods from mice
         available_methods <- tryCatch({
           names(mice::mice.impute.dispatchtable)
         }, error = function(e2) {
@@ -351,7 +367,8 @@ initialize_df <- function(x, seed, method = "mean") {
                     paste(available_methods, collapse = ", "), "\n",
                     "Original error: ", e$message))
       } else {
-        stop(paste0("Error in mice imputation of the initialization: ", e$message))
+        # Re-throw other errors with additional context
+        stop(paste0("Error in mice imputation: ", e$message))
       }
     })
   }
