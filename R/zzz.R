@@ -271,3 +271,90 @@ imputeEllP <- function(point, Sigma.inv){
   }
   return (point.new)
 }
+
+
+
+#' Initialize Missing Data in Data Frame
+#'
+#' This function initializes missing values in a data frame using either mean imputation
+#' or MICE (Multiple Imputation by Chained Equations) methods.
+#'
+#' @param x A data frame or matrix containing missing values to be initialized.
+#' @param seed An integer value to set the random seed for reproducible results. 
+#'   Only used when method is not "mean".
+#' @param method A character string specifying the initialization method. 
+#'   Can be "mean" for mean imputation, or any valid MICE method such as 
+#'   "pmm" (predictive mean matching), "norm" (Bayesian linear regression), 
+#'   "norm.nob" (linear regression ignoring model error), "norm.boot" 
+#'   (linear regression using bootstrap), "norm.predict" (linear regression, 
+#'   predicted values), etc. Default is "mean".
+#'
+#' @return A data frame or matrix with missing values initialized according to 
+#'   the specified method.
+#'
+#' @details 
+#' When method="mean", missing values are replaced with the column means.
+#' For other methods, the function uses the \code{mice} package with the 
+#' specified method. The MICE imputation uses m=1 imputations and maxit=50 
+#' iterations.
+#'
+#' @seealso \code{\link[mice]{mice}} for available MICE methods.
+#'
+#' @examples
+#' # Create data with missing values
+#' set.seed(123)
+#' n <- 100
+#' p <- 3
+#' X <- matrix(rnorm(n*p), n, p)
+#' X[sample(n*p, 0.1*n*p)] <- NA
+#' X_df <- data.frame(X)
+#' 
+#' # Mean imputation
+#' X_init_mean <- initialize_df(X_df, seed = 123, method = "mean")
+#' 
+#' # MICE with predictive mean matching
+#' X_init_pmm <- initialize_df(X_df, seed = 123, method = "pmm")
+#' 
+#' # MICE with Bayesian linear regression
+#' X_init_norm <- initialize_df(X_df, seed = 123, method = "norm")
+#'
+#' @export
+initialize_df <- function(x, seed, method = "mean") {
+  if (method == "mean") {
+    X.mean <- x
+    for (i in 1:ncol(X.mean)) {
+      X.mean[is.na(X.mean[, i]), i] <- mean(X.mean[, i], na.rm = TRUE)
+    }
+    X.sim <- X.mean
+  } else {
+    if (!requireNamespace("mice", quietly = TRUE)) {
+      stop("Package 'mice' is required for methods other than 'mean'. Please install it with: install.packages('mice')")
+    }
+    
+    tryCatch({
+      mice.model <- mice::mice(x, m = 1, maxit = 50, method = method, 
+                               seed = seed, printFlag = FALSE)
+      X.sim <- mice::complete(mice.model)
+    }, error = function(e) {
+      if (grepl("method", e$message, ignore.case = TRUE) || 
+          grepl("not found", e$message, ignore.case = TRUE)) {
+        available_methods <- tryCatch({
+          names(mice::mice.impute.dispatchtable)
+        }, error = function(e2) {
+          c("pmm", "norm", "norm.nob", "norm.boot", "norm.predict", "mean", 
+            "2l.norm", "2l.lmer", "2l.pan", "2l.pmm", "2lonly.mean", 
+            "2lonly.norm", "2lonly.pmm")
+        })
+        
+        stop(paste0("Invalid method '", method, "' for mice imputation.\n",
+                    "Available methods include: ", 
+                    paste(available_methods, collapse = ", "), "\n",
+                    "Original error: ", e$message))
+      } else {
+        stop(paste0("Error in mice imputation of the initialization: ", e$message))
+      }
+    })
+  }
+  
+  return(X.sim)
+}
