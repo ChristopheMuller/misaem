@@ -30,6 +30,7 @@ miss.glm.fit <- function (x, y, control = list()) {
   var_cal <- control$var_cal
   ll_obs_cal <- control$ll_obs_cal
   subsets <- control$subsets
+  save_trace <- control$save_trace
 
   if (!is.na(seed))
     set.seed(seed)
@@ -233,6 +234,13 @@ miss.glm.fit <- function (x, y, control = list()) {
   beta = beta[c(1,subsets+1)]
   names(beta) <- xnames[c(1,subsets+1)]
   names(std_obs) <- xnames[c(1,subsets+1)]
-  list(coefficients = beta, s.err = std_obs, var.covar = var_obs, ll = ll[1,1], Sig.X = Sigma, mu.X = mu
-       )
+  
+  result <- list(coefficients = beta, s.err = std_obs, var.covar = var_obs, ll = ll[1,1], Sig.X = Sigma, mu.X = mu)
+  
+  if (save_trace && missingcols > 0) {
+    result$trace <- seqbeta[c(1,subsets+1), 1:k, drop = FALSE]
+    result$trace_avg <- seqbeta_avg[c(1,subsets+1), 1:k, drop = FALSE]
+  }
+  
+  return(result)
 }

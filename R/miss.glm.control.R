@@ -12,12 +12,13 @@
 #' @param var_cal logical indicating if the variance of estimated parameters should be calculated.
 #' @param ll_obs_cal logical indicating if the observed log-likelihood should be calculated.
 #' @param init_method method to initialize the missing data. Options are "mean" (default), "median", and "random".
+#' @param save_trace logical indicating if the trace of beta values over iterations should be saved.
 #' @return A list with components named as the arguments.
 #' @examples
 #' ## For examples see example(miss.glm)
 
 
-miss.glm.control <- function (maxruns=500,tol_em=1e-7,nmcmc=2,tau=1,k1=50, subsets =NA, seed=NA, print_iter=TRUE, var_cal=TRUE, ll_obs_cal=TRUE, init_method = "mean")
+miss.glm.control <- function (maxruns=500,tol_em=1e-7,nmcmc=2,tau=1,k1=50, subsets =NA, seed=NA, print_iter=TRUE, var_cal=TRUE, ll_obs_cal=TRUE, init_method = "mean", save_trace = FALSE)
 {
   if (!is.numeric(tol_em) || tol_em <= 0)
     stop("value of 'tol_em' must be > 0")
@@ -29,5 +30,5 @@ miss.glm.control <- function (maxruns=500,tol_em=1e-7,nmcmc=2,tau=1,k1=50, subse
     stop("Step-size rate must be > 0")
   if (!is.numeric(k1) || k1 <= 0)
     stop("Number of first k1 iterations must be > 0")
-  list(tol_em = tol_em, maxruns = maxruns, nmcmc = nmcmc, tau = tau, k1=k1, seed = seed, subsets = subsets, print_iter= print_iter, var_cal=var_cal, ll_obs_cal=ll_obs_cal, init_method = init_method)
+  list(tol_em = tol_em, maxruns = maxruns, nmcmc = nmcmc, tau = tau, k1=k1, seed = seed, subsets = subsets, print_iter= print_iter, var_cal=var_cal, ll_obs_cal=ll_obs_cal, init_method = init_method, save_trace = save_trace)
 }
