@@ -84,8 +84,7 @@ miss.glm.fit <- function (x, y, control = list()) {
     seqbeta <- matrix(NA, nrow = ncol(x) + 1, ncol = (maxruns + 1))
     seqbeta_avg <- matrix(NA, nrow = ncol(x) + 1, ncol = (maxruns + 1))
 
-    X.sim <- initialize_df(x = x, seed = seed, method = control$init_method)
-
+    X.sim <- X.mean <- initialize_df(x = x, seed = seed, method = control$init_method)
 
     mu <- colMeans(X.mean)
     Sigma <- var(X.mean) * (n - 1) / n

@@ -11,6 +11,7 @@
 #' @param print_iter logical indicating if output should be produced for each iteration.
 #' @param var_cal logical indicating if the variance of estimated parameters should be calculated.
 #' @param ll_obs_cal logical indicating if the observed log-likelihood should be calculated.
+#' @param init_method method to initialize the missing data. Options are "mean" (default), "median", and "random".
 #' @return A list with components named as the arguments.
 #' @examples
 #' ## For examples see example(miss.glm)
