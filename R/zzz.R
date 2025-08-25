@@ -372,6 +372,6 @@ initialize_df <- function(x, seed, method = "mean") {
       }
     })
   }
-  
+  X.sim <- as.matrix(X.sim)
   return(X.sim)
 }
