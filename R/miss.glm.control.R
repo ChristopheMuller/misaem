@@ -16,7 +16,7 @@
 #' ## For examples see example(miss.glm)
 
 
-miss.glm.control <- function (maxruns=500,tol_em=1e-7,nmcmc=2,tau=1,k1=50, subsets =NA, seed=NA, print_iter=TRUE, var_cal=TRUE, ll_obs_cal=TRUE)
+miss.glm.control <- function (maxruns=500,tol_em=1e-7,nmcmc=2,tau=1,k1=50, subsets =NA, seed=NA, print_iter=TRUE, var_cal=TRUE, ll_obs_cal=TRUE, init_method = "mean")
 {
   if (!is.numeric(tol_em) || tol_em <= 0)
     stop("value of 'tol_em' must be > 0")
@@ -28,11 +28,5 @@ miss.glm.control <- function (maxruns=500,tol_em=1e-7,nmcmc=2,tau=1,k1=50, subse
     stop("Step-size rate must be > 0")
   if (!is.numeric(k1) || k1 <= 0)
     stop("Number of first k1 iterations must be > 0")
-  # if (sum(subsets %in% 1:p) < length(subsets))  {
-  #   stop("Error: index of selected variables must be in the range of covariates.")
-  # }
-  # if (length(unique(subsets)) != length(subsets)){
-  #   stop("Error: index of selected variables must not be repeated.")
-  # }
-  list(tol_em = tol_em, maxruns = maxruns, nmcmc = nmcmc, tau = tau, k1=k1, seed = seed, subsets = subsets, print_iter= print_iter, var_cal=var_cal, ll_obs_cal=ll_obs_cal)
+  list(tol_em = tol_em, maxruns = maxruns, nmcmc = nmcmc, tau = tau, k1=k1, seed = seed, subsets = subsets, print_iter= print_iter, var_cal=var_cal, ll_obs_cal=ll_obs_cal, init_method = init_method)
 }
