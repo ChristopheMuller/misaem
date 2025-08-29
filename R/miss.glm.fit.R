@@ -11,7 +11,7 @@
 #' \item{s.err}{Standard error for estimated parameters.}
 #' \item{mu.X}{Estimated \eqn{\mu}{\mu}.}
 #' \item{Sig.X}{Estimated \eqn{\Sigma}{\Sigma}.}
-#' @import mvtnorm stats
+#' @import mvtnorm stats glmnet
 #' @examples
 #' ## For examples see example(miss.glm)
 
@@ -31,6 +31,8 @@ miss.glm.fit <- function (x, y, control = list()) {
   ll_obs_cal <- control$ll_obs_cal
   subsets <- control$subsets
   save_trace <- control$save_trace
+  alpha <- control$alpha
+  lambda <- control$lambda
 
   if (!is.na(seed))
     set.seed(seed)
@@ -90,9 +92,11 @@ miss.glm.fit <- function (x, y, control = list()) {
     mu <- colMeans(X.mean)
     Sigma <- var(X.mean) * (n - 1) / n
     beta <- rep(0, p + 1)
-    beta[c(1,subsets+1)]= glm(y~ X.mean[,subsets],family=binomial(link='logit'))$coef
+    # beta[c(1,subsets+1)]= glm(y~ X.mean[,subsets],family=binomial(link='logit'))$coef
+    beta[subsets+1] <- glmnet(X.mean[,subsets], y, family = "binomial", alpha = alpha, lambda = lambda)$beta[subsets, 1]
+    beta[1] <- glmnet(X.mean[,subsets], y, family = "binomial", alpha = alpha, lambda = lambda)$a0[1]
 
-     if(print_iter==TRUE){
+    if(print_iter==TRUE){
       cat(sprintf('Iteration of SAEM: \n'))
     }
 
@@ -179,7 +183,8 @@ miss.glm.fit <- function (x, y, control = list()) {
         X.sim[rows_with_pattern, jna] <- xina
       }
       beta_new <- rep(0,p+1)
-      beta_new[c(1,subsets+1)] <- glm(y~ X.sim[,subsets],family=binomial(link='logit'))$coef
+      beta_new[subsets+1] <- glmnet(X.sim[,subsets], y, family = "binomial", alpha = alpha, lambda = lambda)$beta[subsets, 1]
+      beta_new[1] <- glmnet(X.sim[,subsets], y, family = "binomial", alpha = alpha, lambda = lambda)$a0[1]
 
       beta <- (1-gamma)*beta + gamma*beta_new
       cstop <- sum((beta-beta.old)^2)
@@ -209,10 +214,12 @@ miss.glm.fit <- function (x, y, control = list()) {
   if(missingcols==0){
     x = matrix(x,nrow=n)
     data.complete <- data.frame(y=y,x)
-    model.complete <- glm(y ~. ,family=binomial(link='logit'),data=data.complete)
+    # model.complete <- glm(y ~. ,family=binomial(link='logit'),data=data.complete)
+    model.complete <- glmnet(x, y, family = "binomial", alpha = alpha, lambda = lambda)
     mu = apply(x,2,mean)
     Sigma = var(x)*(n-1)/n
-    beta <- model.complete$coefficients
+    beta[1] <- model.complete$a0[1]
+    beta[subsets+1] <- model.complete$beta[subsets, 1]
     var_obs = ll = ll1 =ll2= std_obs =seqbeta_avg= seqbeta=NULL
     if(var_cal==TRUE){
       P <- predict(model.complete, type = "response")
