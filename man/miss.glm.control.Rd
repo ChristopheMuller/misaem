@@ -14,7 +14,11 @@ miss.glm.control(
   seed = NA,
   print_iter = TRUE,
   var_cal = TRUE,
-  ll_obs_cal = TRUE
+  ll_obs_cal = TRUE,
+  init_method = "mean",
+  save_trace = FALSE,
+  alpha = 0,
+  lambda = 1
 )
 }
 \arguments{
@@ -37,6 +41,10 @@ miss.glm.control(
 \item{var_cal}{logical indicating if the variance of estimated parameters should be calculated.}
 
 \item{ll_obs_cal}{logical indicating if the observed log-likelihood should be calculated.}
+
+\item{init_method}{method to initialize the missing data. Options are "mean" (default), "median", and "random".}
+
+\item{save_trace}{logical indicating if the trace of beta values over iterations should be saved.}
 }
 \value{
 A list with components named as the arguments.

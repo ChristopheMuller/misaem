@@ -319,6 +319,7 @@ imputeEllP <- function(point, Sigma.inv){
 #' # MICE with Bayesian linear regression
 #' X_init_norm <- initialize_df(X_df, seed = 123, method = "norm")
 #'
+#' @import mice
 #' @export
 initialize_df <- function(x, seed, method = "mean") {
   # Convert to data frame if input is a matrix, preserving dimensions
