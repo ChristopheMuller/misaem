@@ -301,7 +301,7 @@ imputeEllP <- function(point, Sigma.inv){
 #' # Mean imputation
 #' X_init_mean <- initialize_df(X_df, method = "mean")
 #'
-initialize_df <- function(x, method = "mean") {
+initialize_df <- function(x, method = "mean", seed = NULL) {
   if (is.matrix(x)) {
     x_numeric <- apply(x, 2, as.numeric)
     x <- as.data.frame(x_numeric)
