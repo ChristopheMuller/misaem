@@ -220,28 +220,40 @@ miss.glm.fit <- function (x, y, control = list()) {
       ll = likelihood_saem(beta,mu,Sigma,y,x,rindic,whichcolmissing,mc.size=100)
     }
   }
+  
   if(missingcols==0){
-    x = matrix(x,nrow=n)
-    data.complete <- data.frame(y=y,x)
-    mu = apply(x,2,mean)
-    Sigma = var(x)*(n-1)/n
+    x <- as.matrix(x)
+    
+    x_sub <- x[, subsets, drop = FALSE]
+    
+    data.complete <- data.frame(y=y, x_sub)
+    mu <- apply(x,2,mean)
+    Sigma <- var(x)*(n-1)/n
+    beta <- rep(0, p + 1)
+    
     if (lambda == 0){
-      model.complete <- glm(y ~. ,family=binomial(link='logit'),data=data.complete)
-      beta <- model.complete$coefficients
+      model.complete <- glm(y ~ ., family=binomial(link='logit'), data=data.complete)
+      beta[c(1, subsets + 1)] <- model.complete$coefficients
     } else {
-      model.complete <- glmnet(x, y, family = "binomial", alpha = alphaReg, lambda = lambda)
-      beta[1] <- model.complete$a0[1]
-      beta[subsets+1] <- model.complete$beta[subsets, 1]
+      model.complete <- glmnet(x_sub, y, family = "binomial", alpha = alphaReg, lambda = lambda)
+      beta[subsets+1] <- as.vector(model.complete$beta)
+      beta[1] <- model.complete$a0
     }
-    var_obs = ll = ll1 =ll2= std_obs =seqbeta_avg= seqbeta=NULL
+    
+    var_obs = ll = std_obs = seqbeta_avg = seqbeta = NULL
+    
     if(var_cal==TRUE){
-      P <- predict(model.complete, type = "response")
+      P <- predict(model.complete, newx = x_sub, type = "response")
       W <- diag(P*(1-P))
-      X <- model.matrix(model.complete)
-
-      var_obs <- solve(t(X)%*%W%*%X)
+      X_design <- cbind(1, x_sub)
+      
+      var_obs_sub <- solve(t(X_design) %*% W %*% X_design)
+      
+      var_obs <- matrix(0, p + 1, p + 1)
+      var_obs[c(1, subsets + 1), c(1, subsets + 1)] <- var_obs_sub
       std_obs <- sqrt(diag(var_obs))
     }
+    
     if(ll_obs_cal==TRUE){
       ll = likelihood_saem(beta,mu,Sigma,y,x,rindic,whichcolmissing,mc.size=100)
     }
