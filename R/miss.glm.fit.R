@@ -219,9 +219,9 @@ miss.glm.fit <- function (x, y, control = list()) {
     if(ll_obs_cal==TRUE){
       ll = likelihood_saem(beta,mu,Sigma,y,x,rindic,whichcolmissing,mc.size=100)
     }
-  }
-  
-  if(missingcols==0){
+
+  } else{ # no missing data
+
     x <- as.matrix(x)
     
     x_sub <- x[, subsets, drop = FALSE]
@@ -244,6 +244,8 @@ miss.glm.fit <- function (x, y, control = list()) {
     
     if(var_cal==TRUE){
       P <- predict(model.complete, newx = x_sub, type = "response")
+      P <- as.vector(P)
+
       W <- diag(P*(1-P))
       X_design <- cbind(1, x_sub)
       
