@@ -100,6 +100,8 @@ miss.glm.fit <- function (x, y, control = list()) {
       beta[1] <- g$a0[1]
     }
 
+    initial_scale <- sum(abs(beta))
+
     if(print_iter==TRUE){
       cat(sprintf('Iteration of SAEM: \n'))
     }
@@ -270,6 +272,10 @@ miss.glm.fit <- function (x, y, control = list()) {
   if (save_trace && missingcols > 0) {
     result$trace <- seqbeta[c(1,subsets+1), 1:k, drop = FALSE]
     result$trace_avg <- seqbeta_avg[c(1,subsets+1), 1:k, drop = FALSE]
+  }
+
+  if (sum(abs(beta)) > 10 * initial_scale) {
+    warning("Warning: convergence problem, please re-try with some regularization (lambda>0).")
   }
   
   return(result)
