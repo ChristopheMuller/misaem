@@ -4,35 +4,24 @@
 \alias{initialize_df}
 \title{Initialize Missing Data in Data Frame}
 \usage{
-initialize_df(x, seed, method = "mean")
+initialize_df(x, method = "mean", seed = NULL)
 }
 \arguments{
 \item{x}{A data frame or matrix containing missing values to be initialized.
-If a matrix is provided, it will be converted to a data frame internally.}
-
-\item{seed}{An integer value to set the random seed for reproducible results. 
-Only used when method is not "mean".}
+  If a matrix is provided, it will be converted to a data frame internally.}
 
 \item{method}{A character string specifying the initialization method. 
-Can be "mean" for mean imputation, or any valid MICE method such as 
-"pmm" (predictive mean matching), "norm" (Bayesian linear regression), 
-"norm.nob" (linear regression ignoring model error), "norm.boot" 
-(linear regression using bootstrap), "norm.predict" (linear regression, 
-predicted values), etc. Default is "mean".}
+  Currently, only "mean" is supported.}
 }
 \value{
-A data frame or matrix with missing values initialized according to 
-  the specified method.
+A data frame or matrix with missing values initialized using the
+  mean of each column.
 }
 \description{
-This function initializes missing values in a data frame using either mean imputation
-or MICE (Multiple Imputation by Chained Equations) methods.
+This function initializes missing values in a data frame using mean imputation.
 }
 \details{
-When method="mean", missing values are replaced with the column means.
-For other methods, the function uses the \code{mice} package with the 
-specified method. The MICE imputation uses m=1 imputations and maxit=50 
-iterations.
+Missing values are replaced with the column means.
 }
 \examples{
 # Create data with missing values
@@ -44,15 +33,6 @@ X[sample(n*p, 0.1*n*p)] <- NA
 X_df <- data.frame(X)
 
 # Mean imputation
-X_init_mean <- initialize_df(X_df, seed = 123, method = "mean")
+X_init_mean <- initialize_df(X_df, method = "mean")
 
-# MICE with predictive mean matching
-X_init_pmm <- initialize_df(X_df, seed = 123, method = "pmm")
-
-# MICE with Bayesian linear regression
-X_init_norm <- initialize_df(X_df, seed = 123, method = "norm")
-
-}
-\seealso{
-\code{\link[mice]{mice}} for available MICE methods.
 }

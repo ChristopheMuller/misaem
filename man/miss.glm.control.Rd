@@ -15,10 +15,12 @@ miss.glm.control(
   print_iter = TRUE,
   var_cal = TRUE,
   ll_obs_cal = TRUE,
-  init_method = "mean",
-  save_trace = FALSE,
   alpha = 0,
-  lambda = 1
+  lambda = 0,
+  save_trace = FALSE,
+  init_method = "mean",
+  ignore_errors = FALSE,
+  ...
 )
 }
 \arguments{
@@ -42,9 +44,13 @@ miss.glm.control(
 
 \item{ll_obs_cal}{logical indicating if the observed log-likelihood should be calculated.}
 
-\item{init_method}{method to initialize the missing data. Options are "mean" (default), "median", and "random".}
+\item{alpha}{elastic-net mixing parameter, with 0 <= alpha <= 1. The default is alpha = 0 (ridge).}
+
+\item{lambda}{non-negative regularization parameter. The default is lambda = 0 (no regularization).}
 
 \item{save_trace}{logical indicating if the trace of beta values over iterations should be saved.}
+
+\item{init_method}{method to initialize the missing data. "mean", its default value, is the only option currently implemented.}
 }
 \value{
 A list with components named as the arguments.
