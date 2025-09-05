@@ -275,7 +275,11 @@ miss.glm.fit <- function (x, y, control = list()) {
   }
 
   if (sum(abs(beta)) > 10 * initial_scale) {
-    warning("Warning: convergence problem, please re-try with some regularization (lambda>0).")
+    if (control$ignore_errors) {
+      warning("Warning: convergence problem, please re-try with some regularization (lambda>0).")
+    } else {
+      stop("Warning: convergence problem, please re-try with some regularization (lambda>0).")
+    }
   }
   
   return(result)
