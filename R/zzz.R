@@ -146,8 +146,6 @@ louis_lr_saem = function(beta,mu,Sigma,Y,X.obs,pos_var=1:ncol(X.obs),rindic=as.m
 #' @param beta Estimated parameter of logistic regression model.
 #' @param iflog If TRUE, log_reg calculate the log-likelihood; else likelihood.
 #' @return Likelihood or log-likelihood.
-#' @examples
-#' res = log_reg(1,c(1,2,3),c(1,-1,1))
 log_reg <- function(y,x,beta,iflog=TRUE){
   res <- y*(x%*%beta) - log(1+exp(x%*%beta))
   if(iflog==TRUE)
@@ -281,6 +279,7 @@ imputeEllP <- function(point, Sigma.inv){
 #'   If a matrix is provided, it will be converted to a data frame internally.
 #' @param method A character string specifying the initialization method. 
 #'   Currently, only "mean" is supported.
+#' @param seed An optional integer to set the random seed for reproducibility. Not used in the current implementation.
 #'
 #' @return A data frame or matrix with missing values initialized using the
 #'   mean of each column.
@@ -288,17 +287,6 @@ imputeEllP <- function(point, Sigma.inv){
 #' @details 
 #' Missing values are replaced with the column means.
 #'
-#' @examples
-#' # Create data with missing values
-#' set.seed(123)
-#' n <- 100
-#' p <- 3
-#' X <- matrix(rnorm(n*p), n, p)
-#' X[sample(n*p, 0.1*n*p)] <- NA
-#' X_df <- data.frame(X)
-#' 
-#' # Mean imputation
-#' X_init_mean <- initialize_df(X_df, method = "mean")
 #'
 initialize_df <- function(x, method = "mean", seed = NULL) {
   if (is.matrix(x)) {

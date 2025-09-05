@@ -12,6 +12,8 @@ initialize_df(x, method = "mean", seed = NULL)
 
 \item{method}{A character string specifying the initialization method. 
   Currently, only "mean" is supported.}
+
+\item{seed}{An optional integer to set the random seed for reproducibility. Not used in the current implementation.}
 }
 \value{
 A data frame or matrix with missing values initialized using the
@@ -22,17 +24,4 @@ This function initializes missing values in a data frame using mean imputation.
 }
 \details{
 Missing values are replaced with the column means.
-}
-\examples{
-# Create data with missing values
-set.seed(123)
-n <- 100
-p <- 3
-X <- matrix(rnorm(n*p), n, p)
-X[sample(n*p, 0.1*n*p)] <- NA
-X_df <- data.frame(X)
-
-# Mean imputation
-X_init_mean <- initialize_df(X_df, method = "mean")
-
 }

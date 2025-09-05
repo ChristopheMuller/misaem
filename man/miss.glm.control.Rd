@@ -51,6 +51,8 @@ miss.glm.control(
 \item{save_trace}{logical indicating if the trace of beta values over iterations should be saved.}
 
 \item{init_method}{method to initialize the missing data. "mean", its default value, is the only option currently implemented.}
+
+\item{ignore_errors}{logical indicating if errors during the fitting process should be ignored (TRUE, raising a warning instead) or stop the execution (FALSE). Default is FALSE.}
 }
 \value{
 A list with components named as the arguments.

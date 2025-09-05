@@ -16,6 +16,7 @@
 #' @param lambda non-negative regularization parameter. The default is lambda = 0 (no regularization).
 #' @param save_trace logical indicating if the trace of beta values over iterations should be saved.
 #' @param init_method method to initialize the missing data. "mean", its default value, is the only option currently implemented.
+#' @param ignore_errors logical indicating if errors during the fitting process should be ignored (TRUE, raising a warning instead) or stop the execution (FALSE). Default is FALSE.
 #' 
 #' @return A list with components named as the arguments.
 #' 

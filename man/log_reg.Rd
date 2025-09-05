@@ -21,6 +21,3 @@ Likelihood or log-likelihood.
 \description{
 Calculate the likelihood or log-likelihood for one observation of logistic regression model .
 }
-\examples{
-res = log_reg(1,c(1,2,3),c(1,-1,1))
-}
