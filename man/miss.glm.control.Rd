@@ -19,8 +19,7 @@ miss.glm.control(
   lambda = 0,
   save_trace = FALSE,
   init_method = "mean",
-  ignore_errors = FALSE,
-  ...
+  ignore_errors = FALSE
 )
 }
 \arguments{

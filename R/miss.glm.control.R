@@ -24,7 +24,7 @@
 #' ## For examples see example(miss.glm)
 
 
-miss.glm.control <- function (maxruns=500,tol_em=1e-7,nmcmc=2,tau=1,k1=50, subsets=NA, seed=NA, print_iter=TRUE, var_cal=TRUE, ll_obs_cal=TRUE, alpha = 0, lambda = 0, save_trace = FALSE, init_method = "mean", ignore_errors = FALSE, ...)
+miss.glm.control <- function (maxruns=500,tol_em=1e-7,nmcmc=2,tau=1,k1=50, subsets=NA, seed=NA, print_iter=TRUE, var_cal=TRUE, ll_obs_cal=TRUE, alpha = 0, lambda = 0, save_trace = FALSE, init_method = "mean", ignore_errors = FALSE)
 {
   if (!is.numeric(tol_em) || tol_em <= 0)
     stop("value of 'tol_em' must be > 0")
@@ -42,5 +42,5 @@ miss.glm.control <- function (maxruns=500,tol_em=1e-7,nmcmc=2,tau=1,k1=50, subse
     stop("Elastic-net mixing parameter must be between 0 and 1")
   if (!(init_method %in% c("mean")))
     stop("The only implemented method to initialize the missing data is 'mean'.")
-  list(tol_em = tol_em, maxruns = maxruns, nmcmc = nmcmc, tau = tau, k1=k1, seed = seed, subsets = subsets, print_iter= print_iter, var_cal=var_cal, ll_obs_cal=ll_obs_cal, init_method = init_method, save_trace = save_trace, alpha = alpha, lambda = lambda, ignore_errors = ignore_errors, ...)
+  list(tol_em = tol_em, maxruns = maxruns, nmcmc = nmcmc, tau = tau, k1=k1, seed = seed, subsets = subsets, print_iter= print_iter, var_cal=var_cal, ll_obs_cal=ll_obs_cal, init_method = init_method, save_trace = save_trace, alpha = alpha, lambda = lambda, ignore_errors = ignore_errors)
 }
