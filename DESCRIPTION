@@ -4,7 +4,7 @@ Version: 1.1.0
 Title: Linear Regression and Logistic Regression with Missing Covariates
 Date: 2025-09-05
 Authors@R: c( person("Wei", "Jiang", role = "aut", email = "wei.jiang@polytechnique.edu"),
-              person("Pavlo","Mozharovskyi", role = "ctb", email = "pavlo.mozharovskyi@telecom-paristech.fr"),
+              person("Pavlo", "Mozharovskyi", role = "ctb", email = "pavlo.mozharovskyi@telecom-paristech.fr"),
               person("Imke", "Mayer", role = "ctb", email = "mayer.imke@gmail.com"),
               person("Christophe", "Muller", role = "ctb", email = "christophe.muller@jesus.ox.ac.uk"),
               person("Julie", "Josse", role = c("aut", "cre"), email = "julie.josse@inria.fr"))
