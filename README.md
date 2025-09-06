@@ -29,3 +29,8 @@ vignette('misaem')
 Logistic Regression with Missing Covariates
 -- Parameter Estimation, Model Selection
 and Prediction (2020, Jiang W., Josse J., Lavielle M., TraumaBase Group), [Computational Statistics & Data Analysis](https://doi.org/10.1016/j.csda.2019.106907).
+
+
+## Code development
+
+Initially developped on [github.com/wjiang94/misaem](https://github.com/wjiang94/misaem), the project was moved to [github.com/ChristopheMuller/misaem](https://github.com/ChristopheMuller/misaem) as of version 1.1.0.
