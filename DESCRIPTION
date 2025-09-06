@@ -18,8 +18,9 @@ Imports: mvtnorm,
     abind,
     glmnet
 Suggests: knitr,
-    rmarkdown
-Description: Estimate parameters of linear regression and logistic regression with missing covariates with missing data, perform model selection and prediction, using EM-type algorithms.
+    rmarkdown,
+    mice
+Description: Estimate parameters of linear regression and logistic regression with missing covariates with missing data, perform model selection and prediction, using EM-type algorithms. Jiang W., Josse J., Lavielle M., TraumaBase Group (2020) <doi:10.1016/j.csda.2019.106907>.
 Encoding: UTF-8
 License: GPL-3
 URL: https://github.com/ChristopheMuller/misaem
