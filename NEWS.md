@@ -1,3 +1,15 @@
+# misaem 1.1.0
+
+A release improving stability and speed:
+
+* Vectorization of the function `miss.glm.fit`
+
+* Improve the stability of `miss.glm.fit` by catching infinity ratio
+
+* Catch some convergence issues of `miss.glm.fit` and raise appropriate error
+
+* Allow the use of regularization in the logistic regression, by using glmnet package
+
 # misaem 1.0.0
 
 A major release mainly update the follows:
