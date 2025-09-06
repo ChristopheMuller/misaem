@@ -4,7 +4,7 @@ author: "Wei Jiang, Christophe Muller"
 date: "`r Sys.Date()`"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{misaem tutorial}
+  %\VignetteIndexEntry{Linear regression and logistic regression with missing covariates}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---

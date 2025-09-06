@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+
+<html>
+
+<head>
+
+<meta charset="utf-8" />
+<meta name="generator" content="pandoc" />
+<meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
+
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+<meta name="author" content="Wei Jiang, Christophe Muller" />
+
+<meta name="date" content="2025-09-06" />
+
+<title>Linear regression and logistic regression with missing covariates</title>
+
+<script>// Pandoc 2.9 adds attributes on both header and div. We remove the former (to
+// be compatible with the behavior of Pandoc < 2.8).
+document.addEventListener('DOMContentLoaded', function(e) {
+  var hs = document.querySelectorAll("div.section[class*='level'] > :first-child");
+  var i, h, a;
+  for (i = 0; i < hs.length; i++) {
+    h = hs[i];
+    if (!/^h[1-6]$/i.test(h.tagName)) continue;  // it should be a header h1-h6
+    a = h.attributes;
+    while (a.length > 0) h.removeAttribute(a[0].name);
+  }
+});
+</script>
+
+<style type="text/css">
+code{white-space: pre-wrap;}
+span.smallcaps{font-variant: small-caps;}
+span.underline{text-decoration: underline;}
+div.column{display: inline-block; vertical-align: top; width: 50%;}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+</style>
+
+
+
+<style type="text/css">
+code {
+white-space: pre;
+}
+.sourceCode {
+overflow: visible;
+}
+</style>
+<style type="text/css" data-origin="pandoc">
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { display: inline-block; text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+{ counter-reset: source-line 0; }
+pre.numberSource code > span
+{ position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+{ content: counter(source-line);
+position: relative; left: -1em; text-align: right; vertical-align: baseline;
+border: none; display: inline-block;
+-webkit-touch-callout: none; -webkit-user-select: none;
+-khtml-user-select: none; -moz-user-select: none;
+-ms-user-select: none; user-select: none;
+padding: 0 4px; width: 4em;
+color: #aaaaaa;
+}
+pre.numberSource { margin-left: 3em; border-left: 1px solid #aaaaaa; padding-left: 4px; }
+div.sourceCode
+{ }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+code span.al { color: #ff0000; font-weight: bold; } 
+code span.an { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.at { color: #7d9029; } 
+code span.bn { color: #40a070; } 
+code span.bu { color: #008000; } 
+code span.cf { color: #007020; font-weight: bold; } 
+code span.ch { color: #4070a0; } 
+code span.cn { color: #880000; } 
+code span.co { color: #60a0b0; font-style: italic; } 
+code span.cv { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.do { color: #ba2121; font-style: italic; } 
+code span.dt { color: #902000; } 
+code span.dv { color: #40a070; } 
+code span.er { color: #ff0000; font-weight: bold; } 
+code span.ex { } 
+code span.fl { color: #40a070; } 
+code span.fu { color: #06287e; } 
+code span.im { color: #008000; font-weight: bold; } 
+code span.in { color: #60a0b0; font-weight: bold; font-style: italic; } 
+code span.kw { color: #007020; font-weight: bold; } 
+code span.op { color: #666666; } 
+code span.ot { color: #007020; } 
+code span.pp { color: #bc7a00; } 
+code span.sc { color: #4070a0; } 
+code span.ss { color: #bb6688; } 
+code span.st { color: #4070a0; } 
+code span.va { color: #19177c; } 
+code span.vs { color: #4070a0; } 
+code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } 
+</style>
+<script>
+// apply pandoc div.sourceCode style to pre.sourceCode instead
+(function() {
+  var sheets = document.styleSheets;
+  for (var i = 0; i < sheets.length; i++) {
+    if (sheets[i].ownerNode.dataset["origin"] !== "pandoc") continue;
+    try { var rules = sheets[i].cssRules; } catch (e) { continue; }
+    var j = 0;
+    while (j < rules.length) {
+      var rule = rules[j];
+      // check if there is a div.sourceCode rule
+      if (rule.type !== rule.STYLE_RULE || rule.selectorText !== "div.sourceCode") {
+        j++;
+        continue;
+      }
+      var style = rule.style.cssText;
+      // check if color or background-color is set
+      if (rule.style.color === '' && rule.style.backgroundColor === '') {
+        j++;
+        continue;
+      }
+      // replace div.sourceCode by a pre.sourceCode rule
+      sheets[i].deleteRule(j);
+      sheets[i].insertRule('pre.sourceCode{' + style + '}', j);
+    }
+  }
+})();
+</script>
+
+
+
+
+<style type="text/css">body {
+background-color: #fff;
+margin: 1em auto;
+max-width: 700px;
+overflow: visible;
+padding-left: 2em;
+padding-right: 2em;
+font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+font-size: 14px;
+line-height: 1.35;
+}
+#TOC {
+clear: both;
+margin: 0 0 10px 10px;
+padding: 4px;
+width: 400px;
+border: 1px solid #CCCCCC;
+border-radius: 5px;
+background-color: #f6f6f6;
+font-size: 13px;
+line-height: 1.3;
+}
+#TOC .toctitle {
+font-weight: bold;
+font-size: 15px;
+margin-left: 5px;
+}
+#TOC ul {
+padding-left: 40px;
+margin-left: -1.5em;
+margin-top: 5px;
+margin-bottom: 5px;
+}
+#TOC ul ul {
+margin-left: -2em;
+}
+#TOC li {
+line-height: 16px;
+}
+table {
+margin: 1em auto;
+border-width: 1px;
+border-color: #DDDDDD;
+border-style: outset;
+border-collapse: collapse;
+}
+table th {
+border-width: 2px;
+padding: 5px;
+border-style: inset;
+}
+table td {
+border-width: 1px;
+border-style: inset;
+line-height: 18px;
+padding: 5px 5px;
+}
+table, table th, table td {
+border-left-style: none;
+border-right-style: none;
+}
+table thead, table tr.even {
+background-color: #f7f7f7;
+}
+p {
+margin: 0.5em 0;
+}
+blockquote {
+background-color: #f6f6f6;
+padding: 0.25em 0.75em;
+}
+hr {
+border-style: solid;
+border: none;
+border-top: 1px solid #777;
+margin: 28px 0;
+}
+dl {
+margin-left: 0;
+}
+dl dd {
+margin-bottom: 13px;
+margin-left: 13px;
+}
+dl dt {
+font-weight: bold;
+}
+ul {
+margin-top: 0;
+}
+ul li {
+list-style: circle outside;
+}
+ul ul {
+margin-bottom: 0;
+}
+pre, code {
+background-color: #f7f7f7;
+border-radius: 3px;
+color: #333;
+white-space: pre-wrap; 
+}
+pre {
+border-radius: 3px;
+margin: 5px 0px 10px 0px;
+padding: 10px;
+}
+pre:not([class]) {
+background-color: #f7f7f7;
+}
+code {
+font-family: Consolas, Monaco, 'Courier New', monospace;
+font-size: 85%;
+}
+p > code, li > code {
+padding: 2px 0px;
+}
+div.figure {
+text-align: center;
+}
+img {
+background-color: #FFFFFF;
+padding: 2px;
+border: 1px solid #DDDDDD;
+border-radius: 3px;
+border: 1px solid #CCCCCC;
+margin: 0 5px;
+}
+h1 {
+margin-top: 0;
+font-size: 35px;
+line-height: 40px;
+}
+h2 {
+border-bottom: 4px solid #f7f7f7;
+padding-top: 10px;
+padding-bottom: 2px;
+font-size: 145%;
+}
+h3 {
+border-bottom: 2px solid #f7f7f7;
+padding-top: 10px;
+font-size: 120%;
+}
+h4 {
+border-bottom: 1px solid #f7f7f7;
+margin-left: 8px;
+font-size: 105%;
+}
+h5, h6 {
+border-bottom: 1px solid #ccc;
+font-size: 105%;
+}
+a {
+color: #0033dd;
+text-decoration: none;
+}
+a:hover {
+color: #6666ff; }
+a:visited {
+color: #800080; }
+a:visited:hover {
+color: #BB00BB; }
+a[href^="http:"] {
+text-decoration: underline; }
+a[href^="https:"] {
+text-decoration: underline; }
+
+code > span.kw { color: #555; font-weight: bold; } 
+code > span.dt { color: #902000; } 
+code > span.dv { color: #40a070; } 
+code > span.bn { color: #d14; } 
+code > span.fl { color: #d14; } 
+code > span.ch { color: #d14; } 
+code > span.st { color: #d14; } 
+code > span.co { color: #888888; font-style: italic; } 
+code > span.ot { color: #007020; } 
+code > span.al { color: #ff0000; font-weight: bold; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
+</style>
+
+
+
+
+</head>
+
+<body>
+
+
+
+
+<h1 class="title toc-ignore">Linear regression and logistic regression
+with missing covariates</h1>
+<h4 class="author">Wei Jiang, Christophe Muller</h4>
+<h4 class="date">2025-09-06</h4>
+
+
+
+<div id="introduction-of-misaem" class="section level2">
+<h2>Introduction of misaem</h2>
+<p><code>misaem</code> is a package to perform linear regression and
+logistic regression with missing data, under MCAR (Missing completely at
+random) and MAR (Missing at random) mechanisms. The covariates are
+assumed to be continuous variables. The methodology implemented is based
+on maximization of the observed likelihood using EM-types of algorithms.
+The package includes:</p>
+<ol style="list-style-type: decimal">
+<li>Parameters estimation:</li>
+</ol>
+<ul>
+<li>for linear regression, we consider a joint Gaussian distribution for
+covariates and response, then the <code>norm</code> package allows to
+estimate the mean vector and a variance covariance matrix with the EM
+algorithm and SWEEP operator. Finally we have reshaped them to obtain
+the regression coefficient.</li>
+<li>for logistic regression, with a stochastic approximation version of
+EM algorithm (SAEM) based on Metropolis-Hasting sampling.</li>
+</ul>
+<ol start="2" style="list-style-type: decimal">
+<li>Estimation of standard deviation for estimated parameters:</li>
+</ol>
+<ul>
+<li>for linear regression, use the property that the Gram matrix of
+random variables (estimates of regression coefficients) approximates
+their covariance matrix;</li>
+<li>for logistic regression, with Louis formula.</li>
+</ul>
+<ol start="3" style="list-style-type: decimal">
+<li>Model selection procedure based on BIC.</li>
+</ol>
+<div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="fu">library</span>(misaem)</span></code></pre></div>
+</div>
+<div id="ampute-function" class="section level2">
+<h2>Ampute function</h2>
+<p>In our example, we’ll use a custom ampute function. One can also use
+<code>mice::ampute</code> for other examples. For more details about how
+to generate missing values of different mechanisms, see the resource
+website of missing values <a href="https://rmisstastic.netlify.app/">Rmisstastic</a>.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a>ampute <span class="ot">&lt;-</span> <span class="cf">function</span>(X.full, prc.NA){</span>
+<span id="cb2-2"><a href="#cb2-2" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" tabindex="-1"></a>  n <span class="ot">&lt;-</span> <span class="fu">dim</span>(X.full)[<span class="dv">1</span>]</span>
+<span id="cb2-4"><a href="#cb2-4" tabindex="-1"></a>  d <span class="ot">&lt;-</span> <span class="fu">dim</span>(X.full)[<span class="dv">2</span>]</span>
+<span id="cb2-5"><a href="#cb2-5" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" tabindex="-1"></a>  <span class="co"># Create Mask Matrix</span></span>
+<span id="cb2-7"><a href="#cb2-7" tabindex="-1"></a>  M <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, <span class="at">nrow =</span> n, <span class="at">ncol =</span> d)</span>
+<span id="cb2-8"><a href="#cb2-8" tabindex="-1"></a>  <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>d) {</span>
+<span id="cb2-9"><a href="#cb2-9" tabindex="-1"></a>    M[, j] <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(n, <span class="dv">1</span>, prc.NA)</span>
+<span id="cb2-10"><a href="#cb2-10" tabindex="-1"></a>  }</span>
+<span id="cb2-11"><a href="#cb2-11" tabindex="-1"></a>  <span class="cf">while</span> (<span class="fu">any</span>(<span class="fu">rowSums</span>(M) <span class="sc">==</span> d)) {</span>
+<span id="cb2-12"><a href="#cb2-12" tabindex="-1"></a>    M.temp <span class="ot">&lt;-</span> M[<span class="fu">rowSums</span>(M) <span class="sc">&lt;</span> d, ]</span>
+<span id="cb2-13"><a href="#cb2-13" tabindex="-1"></a>    left.to.add <span class="ot">&lt;-</span> n <span class="sc">-</span> <span class="fu">nrow</span>(M.temp)</span>
+<span id="cb2-14"><a href="#cb2-14" tabindex="-1"></a>    M.add <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="dv">0</span>, <span class="at">nrow =</span> left.to.add, <span class="at">ncol =</span> d)</span>
+<span id="cb2-15"><a href="#cb2-15" tabindex="-1"></a>    <span class="cf">for</span> (j <span class="cf">in</span> <span class="dv">1</span><span class="sc">:</span>d) {</span>
+<span id="cb2-16"><a href="#cb2-16" tabindex="-1"></a>      M.add[, j] <span class="ot">&lt;-</span> <span class="fu">rbinom</span>(left.to.add, <span class="dv">1</span>, prc.NA)</span>
+<span id="cb2-17"><a href="#cb2-17" tabindex="-1"></a>    }</span>
+<span id="cb2-18"><a href="#cb2-18" tabindex="-1"></a>    M <span class="ot">&lt;-</span> <span class="fu">rbind</span>(M.temp, M.add)</span>
+<span id="cb2-19"><a href="#cb2-19" tabindex="-1"></a>  }</span>
+<span id="cb2-20"><a href="#cb2-20" tabindex="-1"></a></span>
+<span id="cb2-21"><a href="#cb2-21" tabindex="-1"></a></span>
+<span id="cb2-22"><a href="#cb2-22" tabindex="-1"></a>  X.obs <span class="ot">&lt;-</span> X.full</span>
+<span id="cb2-23"><a href="#cb2-23" tabindex="-1"></a>  X.obs[M <span class="sc">==</span> <span class="dv">1</span>] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb2-24"><a href="#cb2-24" tabindex="-1"></a></span>
+<span id="cb2-25"><a href="#cb2-25" tabindex="-1"></a>  <span class="fu">return</span>(X.obs)</span>
+<span id="cb2-26"><a href="#cb2-26" tabindex="-1"></a></span>
+<span id="cb2-27"><a href="#cb2-27" tabindex="-1"></a>}</span></code></pre></div>
+</div>
+<div id="linear-regression" class="section level2">
+<h2>Linear regression</h2>
+<div id="synthetic-dataset" class="section level3">
+<h3>Synthetic dataset</h3>
+<p>Let’s generate a synthetic example of classical linear regression. We
+first generate a design matrix of size <span class="math inline">\(n =
+50\)</span> times <span class="math inline">\(p = 2\)</span> by drawing
+each observation from a multivariate normal distribution <span class="math inline">\(\mathcal{N}(\mu, \Sigma)\)</span>. We consider as
+the true values for the parameters: <span class="math display">\[\begin{equation*}
+\begin{split}
+\mu &amp;= (1, 1),\\
+\Sigma &amp; = \begin{bmatrix}
+1 &amp; 1\\
+1 &amp; 4\\
+\end{bmatrix}
+\end{split}
+\end{equation*}\]</span> Then, we generate the response according to the
+linear regression model with coefficient <span class="math inline">\(\beta = (2, 3, -1)\)</span> and variance of noise
+vector <span class="math inline">\(\sigma^2 = 0.25\)</span>.</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">1</span>)</span>
+<span id="cb3-2"><a href="#cb3-2" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">50</span> <span class="co"># number of rows</span></span>
+<span id="cb3-3"><a href="#cb3-3" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="dv">2</span> <span class="co"># number of explanatory variables</span></span>
+<span id="cb3-4"><a href="#cb3-4" tabindex="-1"></a></span>
+<span id="cb3-5"><a href="#cb3-5" tabindex="-1"></a><span class="co"># Generate complete design matrix</span></span>
+<span id="cb3-6"><a href="#cb3-6" tabindex="-1"></a><span class="fu">library</span>(MASS)</span>
+<span id="cb3-7"><a href="#cb3-7" tabindex="-1"></a>mu.X <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>) </span>
+<span id="cb3-8"><a href="#cb3-8" tabindex="-1"></a>Sigma.X <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(<span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">4</span>), <span class="at">nrow =</span> <span class="dv">2</span>)</span>
+<span id="cb3-9"><a href="#cb3-9" tabindex="-1"></a>X.complete <span class="ot">&lt;-</span> <span class="fu">mvrnorm</span>(n, mu.X, Sigma.X)</span>
+<span id="cb3-10"><a href="#cb3-10" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" tabindex="-1"></a><span class="co"># Generate response</span></span>
+<span id="cb3-12"><a href="#cb3-12" tabindex="-1"></a>b <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">2</span>, <span class="dv">3</span>, <span class="sc">-</span><span class="dv">1</span>) <span class="co"># regression coefficient</span></span>
+<span id="cb3-13"><a href="#cb3-13" tabindex="-1"></a>sigma.eps <span class="ot">&lt;-</span> <span class="fl">0.25</span> <span class="co"># noise variance</span></span>
+<span id="cb3-14"><a href="#cb3-14" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">cbind</span>(<span class="fu">rep</span>(<span class="dv">1</span>, n), X.complete) <span class="sc">%*%</span> b <span class="sc">+</span> <span class="fu">rnorm</span>(n, <span class="dv">0</span>, sigma.eps)</span></code></pre></div>
+<p>Then we randomly introduced 15% of missing values in the covariates
+according to the MCAR (Missing completely at random) mechanism. To do
+so, we use the custom function <code>ampute</code>.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="co"># Add missing values</span></span>
+<span id="cb4-2"><a href="#cb4-2" tabindex="-1"></a>X.obs <span class="ot">&lt;-</span> <span class="fu">ampute</span>(X.complete, <span class="fl">0.15</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" tabindex="-1"></a>y.obs <span class="ot">&lt;-</span> y</span></code></pre></div>
+<p>Have a look at our synthetic dataset:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="fu">head</span>(X.obs)</span></code></pre></div>
+<pre><code>##            [,1]       [,2]
+## [1,] 0.30528180 -0.1473747
+## [2,] 1.59950261  1.2164969
+## [3,] 0.22508791 -0.5764402
+## [4,] 2.86148303  3.8938533
+## [5,] 0.05283648         NA
+## [6,]         NA -0.1496864</code></pre>
+<p>Check the percentage of missing values:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb7-1"><a href="#cb7-1" tabindex="-1"></a><span class="fu">sum</span>(<span class="fu">is.na</span>(X.obs))<span class="sc">/</span>(n<span class="sc">*</span>p) </span></code></pre></div>
+<pre><code>## [1] 0.13</code></pre>
+</div>
+<div id="estimation-for-linear-regression-with-missing-values" class="section level3">
+<h3>Estimation for linear regression with missing values</h3>
+<p>The main function in our package to fit linear regression with
+missingness is <code>miss.lm</code> function. The function
+<code>miss.lm</code> mimics the structure of widely used function
+<code>lm</code> for the case without missing values. It takes an object
+of class <code>formula</code> (a symbolic description of the model to be
+fitted) and the data frame as the input. Here we apply this function
+with its default options.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb9-1"><a href="#cb9-1" tabindex="-1"></a><span class="co"># Estimate regression using EM with NA </span></span>
+<span id="cb9-2"><a href="#cb9-2" tabindex="-1"></a>df.obs <span class="ot">=</span> <span class="fu">data.frame</span>(y, X.obs)</span>
+<span id="cb9-3"><a href="#cb9-3" tabindex="-1"></a>miss.list <span class="ot">=</span> <span class="fu">miss.lm</span>(y<span class="sc">~</span>., <span class="at">data =</span> df.obs)</span></code></pre></div>
+<pre><code>## Iterations of EM: 
+## 1...2...3...4...5...6...7...8...9...10...11...12...13...14...15...16...</code></pre>
+<p>Then it returns an object of self-defined class <code>miss.lm</code>,
+which consists of the estimation of parameters, their standard error and
+observed log-likelihood. We can print or summarize the obtained results
+as follows:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb11-1"><a href="#cb11-1" tabindex="-1"></a><span class="fu">print</span>(miss.list)</span></code></pre></div>
+<pre><code>## 
+## Call:  miss.lm(formula = y ~ ., data = df.obs)
+## 
+## Coefficients:
+## (Intercept)           X1           X2  
+##       1.883        3.061       -1.005  
+## Standard error estimates:
+## (Intercept)           X1           X2  
+##     0.04616      0.03801      0.02126  
+## Log-likelihood: 29.36</code></pre>
+<div class="sourceCode" id="cb13"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb13-1"><a href="#cb13-1" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">summary</span>(miss.list)) </span></code></pre></div>
+<pre><code>## 
+## Call:
+## miss.lm(formula = y ~ ., data = df.obs)
+## 
+## Coefficients:
+##              Estimate  Std. Error
+## (Intercept)   1.88264   0.04616  
+## X1            3.06148   0.03801  
+## X2           -1.00548   0.02126  
+## Log-likelihood: 29.357</code></pre>
+<div class="sourceCode" id="cb15"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb15-1"><a href="#cb15-1" tabindex="-1"></a><span class="fu">summary</span>(miss.list)<span class="sc">$</span>coef </span></code></pre></div>
+<pre><code>##              Estimate Std. Error
+## (Intercept)  1.882638 0.04615914
+## X1           3.061475 0.03800860
+## X2          -1.005478 0.02126482</code></pre>
+<p>Self-defined parameters can be also taken such as the maximum number
+of iterations (<code>maxruns</code>), the convergence tolerance
+(<code>tol_em</code>) and the logical indicating if the iterations
+should be reported (<code>print_iter</code>).</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb17-1"><a href="#cb17-1" tabindex="-1"></a><span class="co"># Estimate regression using self-defined parameters</span></span>
+<span id="cb17-2"><a href="#cb17-2" tabindex="-1"></a>miss.list2 <span class="ot">=</span> <span class="fu">miss.lm</span>(y<span class="sc">~</span>., <span class="at">data =</span> df.obs, <span class="at">print_iter =</span> <span class="cn">FALSE</span>, <span class="at">maxruns =</span> <span class="dv">500</span>, <span class="at">tol_em =</span> <span class="fl">1e-4</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" tabindex="-1"></a><span class="fu">print</span>(miss.list2)</span></code></pre></div>
+<pre><code>## 
+## Call:  miss.lm(formula = y ~ ., data = df.obs, print_iter = FALSE, maxruns = 500, 
+##     tol_em = 1e-04)
+## 
+## Coefficients:
+## (Intercept)           X1           X2  
+##       1.883        3.061       -1.005  
+## Standard error estimates:
+## (Intercept)           X1           X2  
+##     0.04619      0.03804      0.02128  
+## Log-likelihood: 29.36</code></pre>
+</div>
+<div id="model-selection" class="section level3">
+<h3>Model selection</h3>
+<p>The function <code>miss.lm.model.select</code> adapts a BIC criterion
+and step-wise method to return the best model selected. We add a null
+variable with missing values to check if the function can distinguish it
+from the true variables.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb19-1"><a href="#cb19-1" tabindex="-1"></a><span class="co"># Add null variable with NA</span></span>
+<span id="cb19-2"><a href="#cb19-2" tabindex="-1"></a>X.null <span class="ot">&lt;-</span> <span class="fu">mvrnorm</span>(n, <span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb19-3"><a href="#cb19-3" tabindex="-1"></a>patterns <span class="ot">&lt;-</span> <span class="fu">runif</span>(n)<span class="sc">&lt;</span><span class="fl">0.15</span> <span class="co"># missing completely at random</span></span>
+<span id="cb19-4"><a href="#cb19-4" tabindex="-1"></a>X.null[patterns] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb19-5"><a href="#cb19-5" tabindex="-1"></a>X.obs.null <span class="ot">&lt;-</span> <span class="fu">cbind.data.frame</span>(X.obs, X.null)</span>
+<span id="cb19-6"><a href="#cb19-6" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" tabindex="-1"></a><span class="co"># Without model selection</span></span>
+<span id="cb19-8"><a href="#cb19-8" tabindex="-1"></a>df.obs.null <span class="ot">=</span> <span class="fu">data.frame</span>(y, X.obs.null)</span>
+<span id="cb19-9"><a href="#cb19-9" tabindex="-1"></a>miss.list.null <span class="ot">=</span> <span class="fu">miss.lm</span>(y<span class="sc">~</span>., <span class="at">data =</span> df.obs.null)</span></code></pre></div>
+<pre><code>## Iterations of EM: 
+## 1...2...3...4...5...6...7...8...9...10...11...12...13...14...15...16...17...18...19...20...21...22...23...</code></pre>
+<div class="sourceCode" id="cb21"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb21-1"><a href="#cb21-1" tabindex="-1"></a><span class="fu">print</span>(miss.list.null)</span></code></pre></div>
+<pre><code>## 
+## Call:  miss.lm(formula = y ~ ., data = df.obs.null)
+## 
+## Coefficients:
+## (Intercept)           X1           X2       X.null  
+##     1.92281      3.07431     -1.01380     -0.05101  
+## Standard error estimates:
+## (Intercept)           X1           X2       X.null  
+##     0.05204      0.03822      0.02110      0.02745  
+## Log-likelihood: 7.916</code></pre>
+<div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a><span class="co"># Model selection</span></span>
+<span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a>miss.model <span class="ot">=</span> <span class="fu">miss.lm.model.select</span>(y, X.obs.null)</span>
+<span id="cb23-3"><a href="#cb23-3" tabindex="-1"></a><span class="fu">print</span>(miss.model)</span></code></pre></div>
+<pre><code>## 
+## Call:  miss.lm(formula = Y ~ ., data = df, print_iter = FALSE)
+## 
+## Coefficients:
+## (Intercept)           X1           X2  
+##       1.883        3.061       -1.005  
+## Standard error estimates:
+## (Intercept)           X1           X2  
+##     0.04616      0.03801      0.02126  
+## Log-likelihood: 29.36</code></pre>
+</div>
+<div id="prediction-on-test-set" class="section level3">
+<h3>Prediction on test set</h3>
+<p>In order to evaluate the prediction performance, we generate a test
+set of size <span class="math inline">\(nt = 20\)</span> times <span class="math inline">\(p = 2\)</span> following the same distribution as
+the previous design matrix, and we add or not 15% of missing values.</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" tabindex="-1"></a><span class="co"># Prediction</span></span>
+<span id="cb25-2"><a href="#cb25-2" tabindex="-1"></a><span class="co"># Generate dataset</span></span>
+<span id="cb25-3"><a href="#cb25-3" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">200</span>)</span>
+<span id="cb25-4"><a href="#cb25-4" tabindex="-1"></a>nt <span class="ot">&lt;-</span> <span class="dv">20</span>  <span class="co"># number of new observations</span></span>
+<span id="cb25-5"><a href="#cb25-5" tabindex="-1"></a>Xt <span class="ot">&lt;-</span> <span class="fu">mvrnorm</span>(nt, mu.X, Sigma.X)</span>
+<span id="cb25-6"><a href="#cb25-6" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" tabindex="-1"></a><span class="co"># Add missing values</span></span>
+<span id="cb25-8"><a href="#cb25-8" tabindex="-1"></a>Xt.obs <span class="ot">&lt;-</span> <span class="fu">ampute</span>(Xt, <span class="fl">0.15</span>)</span></code></pre></div>
+<p>The prediction can be performed for a complete test set:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb26-1"><a href="#cb26-1" tabindex="-1"></a><span class="co">#train with NA + test no NA</span></span>
+<span id="cb26-2"><a href="#cb26-2" tabindex="-1"></a>miss.comptest.pred <span class="ot">=</span> <span class="fu">predict</span>(miss.list2, <span class="fu">data.frame</span>(Xt), <span class="at">seed =</span> <span class="dv">100</span>)</span>
+<span id="cb26-3"><a href="#cb26-3" tabindex="-1"></a><span class="fu">print</span>(miss.comptest.pred)</span></code></pre></div>
+<pre><code>##  [1]  3.3350555  2.5567616 -0.6191913  6.5511413  2.8689770  7.9834750
+##  [7]  0.7640520  3.8836697  6.7089083  3.3041055  6.7721756  2.1810048
+## [13]  1.9732412  5.9419726  7.7625725  5.0357058  4.1730339  4.4098238
+## [19]  3.4960140  2.9460593</code></pre>
+<p>And we can also apply the function when both train set and test set
+have missing values:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" tabindex="-1"></a><span class="co">#both train &amp; test with NA</span></span>
+<span id="cb28-2"><a href="#cb28-2" tabindex="-1"></a>miss.pred <span class="ot">=</span> <span class="fu">predict</span>(miss.list2, <span class="fu">data.frame</span>(Xt.obs), <span class="at">seed =</span> <span class="dv">100</span>)</span>
+<span id="cb28-3"><a href="#cb28-3" tabindex="-1"></a><span class="fu">print</span>(miss.pred)</span></code></pre></div>
+<pre><code>##  [1]  3.3350555  2.5567616 -0.6191913  6.5511413  2.8689770  7.9834750
+##  [7]  0.7640520  3.8123903  6.7089083  3.0486207  5.4344376  2.1810048
+## [13]  1.9732412  5.9419726  7.7625725  5.0357058  3.7876726  4.4098238
+## [19]  3.4960140  2.9460593</code></pre>
+</div>
+</div>
+<div id="logistic-regression" class="section level2">
+<h2>Logistic regression</h2>
+<div id="synthetic-dataset-1" class="section level3">
+<h3>Synthetic dataset</h3>
+<p>We first generate a design matrix of size <span class="math inline">\(n=500\)</span> times <span class="math inline">\(p=5\)</span> by drawing each observation from a
+multivariate normal distribution <span class="math inline">\(\mathcal{N}(\mu, \Sigma)\)</span>. Then, we
+generate the response according to the logistic regression model.</p>
+<p>We consider as the true values for the parameters <span class="math display">\[\begin{equation*}
+\begin{split}
+\beta &amp;= (0, 1, -1, 1, 0, -1),\\
+\mu &amp;= (1,2,3,4,5),\\
+\Sigma &amp;= \text{diag}(\sigma)C \text{diag}(\sigma),
+\end{split}
+\end{equation*}\]</span> where the <span class="math inline">\(\sigma\)</span> is the vector of standard
+deviations <span class="math display">\[\sigma=(1,2,3,4,5)\]</span><br />
+and <span class="math inline">\(C\)</span> the correlation matrix <span class="math display">\[C = \begin{bmatrix}
+1  &amp; 0.8 &amp; 0 &amp; 0 &amp;   0\\
+0.8 &amp; 1 &amp; 0 &amp; 0  &amp;  0\\
+0  &amp; 0 &amp; 1 &amp; 0.3 &amp;   0.6\\
+0 &amp; 0 &amp; 0.3 &amp; 1 &amp;  0.7\\
+0 &amp; 0 &amp; 0.6 &amp; 0.7 &amp;  1\\
+\end{bmatrix}.\]</span></p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb30-1"><a href="#cb30-1" tabindex="-1"></a><span class="co"># Generate dataset</span></span>
+<span id="cb30-2"><a href="#cb30-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">200</span>)</span>
+<span id="cb30-3"><a href="#cb30-3" tabindex="-1"></a>n <span class="ot">&lt;-</span> <span class="dv">500</span>  <span class="co"># number of subjects</span></span>
+<span id="cb30-4"><a href="#cb30-4" tabindex="-1"></a>p <span class="ot">&lt;-</span> <span class="dv">5</span>     <span class="co"># number of explanatory variables</span></span>
+<span id="cb30-5"><a href="#cb30-5" tabindex="-1"></a>mu.star <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span>p  <span class="co">#rep(0,p)  # mean of the explanatory variables</span></span>
+<span id="cb30-6"><a href="#cb30-6" tabindex="-1"></a>sd <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">:</span>p <span class="co"># rep(1,p) # standard deviations</span></span>
+<span id="cb30-7"><a href="#cb30-7" tabindex="-1"></a>C <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">c</span>(   <span class="co"># correlation matrix</span></span>
+<span id="cb30-8"><a href="#cb30-8" tabindex="-1"></a><span class="dv">1</span>,   <span class="fl">0.8</span>, <span class="dv">0</span>,   <span class="dv">0</span>,   <span class="dv">0</span>,</span>
+<span id="cb30-9"><a href="#cb30-9" tabindex="-1"></a><span class="fl">0.8</span>, <span class="dv">1</span>,   <span class="dv">0</span>,   <span class="dv">0</span>,   <span class="dv">0</span>,</span>
+<span id="cb30-10"><a href="#cb30-10" tabindex="-1"></a><span class="dv">0</span>,   <span class="dv">0</span>,   <span class="dv">1</span>,   <span class="fl">0.3</span>, <span class="fl">0.6</span>,</span>
+<span id="cb30-11"><a href="#cb30-11" tabindex="-1"></a><span class="dv">0</span>,   <span class="dv">0</span>,   <span class="fl">0.3</span>, <span class="dv">1</span>,   <span class="fl">0.7</span>,</span>
+<span id="cb30-12"><a href="#cb30-12" tabindex="-1"></a><span class="dv">0</span>,   <span class="dv">0</span>,   <span class="fl">0.6</span>, <span class="fl">0.7</span>, <span class="dv">1</span>), <span class="at">nrow=</span>p)</span>
+<span id="cb30-13"><a href="#cb30-13" tabindex="-1"></a>Sigma.star <span class="ot">&lt;-</span> <span class="fu">diag</span>(sd)<span class="sc">%*%</span>C<span class="sc">%*%</span><span class="fu">diag</span>(sd) <span class="co"># covariance matrix</span></span>
+<span id="cb30-14"><a href="#cb30-14" tabindex="-1"></a>beta.star <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="dv">1</span>, <span class="sc">-</span><span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="sc">-</span><span class="dv">1</span>) <span class="co"># coefficients</span></span>
+<span id="cb30-15"><a href="#cb30-15" tabindex="-1"></a>beta0.star <span class="ot">&lt;-</span> <span class="dv">0</span>  <span class="co"># intercept</span></span>
+<span id="cb30-16"><a href="#cb30-16" tabindex="-1"></a>beta.true <span class="ot">=</span> <span class="fu">c</span>(beta0.star,beta.star)</span>
+<span id="cb30-17"><a href="#cb30-17" tabindex="-1"></a></span>
+<span id="cb30-18"><a href="#cb30-18" tabindex="-1"></a><span class="co"># Design matrix</span></span>
+<span id="cb30-19"><a href="#cb30-19" tabindex="-1"></a>X.complete <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">rnorm</span>(n<span class="sc">*</span>p), <span class="at">nrow=</span>n)<span class="sc">%*%</span><span class="fu">chol</span>(Sigma.star)<span class="sc">+</span></span>
+<span id="cb30-20"><a href="#cb30-20" tabindex="-1"></a>              <span class="fu">matrix</span>(<span class="fu">rep</span>(mu.star,n), <span class="at">nrow=</span>n, <span class="at">byrow =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb30-21"><a href="#cb30-21" tabindex="-1"></a></span>
+<span id="cb30-22"><a href="#cb30-22" tabindex="-1"></a><span class="co"># Reponse vector</span></span>
+<span id="cb30-23"><a href="#cb30-23" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">/</span>(<span class="dv">1</span><span class="sc">+</span><span class="fu">exp</span>(<span class="sc">-</span>X.complete<span class="sc">%*%</span>beta.star<span class="sc">-</span>beta0.star))</span>
+<span id="cb30-24"><a href="#cb30-24" tabindex="-1"></a>y <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(<span class="fu">runif</span>(n)<span class="sc">&lt;</span>p1)</span></code></pre></div>
+<p>Then we randomly introduced 10% of missing values in the covariates
+according to the MCAR (Missing completely at random) mechanism.</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" tabindex="-1"></a><span class="co"># Generate missingness</span></span>
+<span id="cb31-2"><a href="#cb31-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">200</span>)</span>
+<span id="cb31-3"><a href="#cb31-3" tabindex="-1"></a>p.miss <span class="ot">&lt;-</span> <span class="fl">0.10</span></span>
+<span id="cb31-4"><a href="#cb31-4" tabindex="-1"></a>X.obs <span class="ot">&lt;-</span> <span class="fu">ampute</span>(X.complete, p.miss)</span></code></pre></div>
+<p>Have a look at our synthetic dataset:</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" tabindex="-1"></a><span class="fu">head</span>(X.obs)</span></code></pre></div>
+<pre><code>##           [,1]        [,2]      [,3]       [,4]        [,5]
+## [1,] 1.0847563  1.71119812 5.0779956  9.7312548 13.02285225
+## [2,] 1.2264603  0.04664033 5.3758000  6.3830936  4.84730504
+## [3,] 1.4325565  1.77934455 5.6562280         NA  7.26902254
+## [4,] 1.5580652  5.69782193 5.5942869 -0.4407494 -0.96662931
+## [5,] 1.0597553 -0.38470918 0.4462986         NA  0.04745022
+## [6,] 0.8853591  0.56839374 3.4641522         NA  9.11909475</code></pre>
+</div>
+<div id="estimation-for-logistic-regression-with-missingness" class="section level3">
+<h3>Estimation for logistic regression with missingness</h3>
+<p>The main function for fitting logistic regression with missing
+covariates in our package is <code>miss.glm</code> function, which
+mimics the structure of widely used function <code>glm</code>. Note that
+we don’t need to specify the binomial family in the input of
+<code>miss.glm</code> function. Here we apply this function with its
+default options, and then we can print or summarize the obtained results
+as follows:</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" tabindex="-1"></a>df.obs <span class="ot">=</span> <span class="fu">data.frame</span>(y, X.obs)</span>
+<span id="cb34-2"><a href="#cb34-2" tabindex="-1"></a></span>
+<span id="cb34-3"><a href="#cb34-3" tabindex="-1"></a><span class="co">#logistic regression with NA </span></span>
+<span id="cb34-4"><a href="#cb34-4" tabindex="-1"></a>miss.list <span class="ot">=</span> <span class="fu">miss.glm</span>(y<span class="sc">~</span>., <span class="at">data =</span> df.obs, <span class="at">seed =</span> <span class="dv">100</span>)</span></code></pre></div>
+<pre><code>## Iteration of SAEM: 
+## 50... 100... 150... 200...</code></pre>
+<div class="sourceCode" id="cb36"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" tabindex="-1"></a><span class="fu">print</span>(miss.list)</span></code></pre></div>
+<pre><code>## 
+## Call:  miss.glm(formula = y ~ ., data = df.obs, seed = 100)
+## 
+## Coefficients:
+## (Intercept)           X1           X2           X3           X4           X5  
+##      0.1346       1.3226      -1.2643       1.1190       1.1293      -1.1449  
+## Standard error estimates:
+## (Intercept)           X1           X2           X3           X4           X5  
+##      0.3332       0.3654       0.2244       0.1495       0.1451       0.1469  
+## Log-likelihood: -172.4</code></pre>
+<div class="sourceCode" id="cb38"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" tabindex="-1"></a><span class="fu">print</span>(<span class="fu">summary</span>(miss.list)) </span></code></pre></div>
+<pre><code>## 
+## Call:
+## miss.glm(formula = y ~ ., data = df.obs, seed = 100)
+## 
+## Coefficients:
+##              Estimate  Std. Error
+## (Intercept)   0.1346    0.3332   
+## X1            1.3226    0.3654   
+## X2           -1.2643    0.2244   
+## X3            1.1190    0.1495   
+## X4            1.1293    0.1451   
+## X5           -1.1449    0.1469   
+## Log-likelihood: -172.36</code></pre>
+<div class="sourceCode" id="cb40"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" tabindex="-1"></a><span class="fu">summary</span>(miss.list)<span class="sc">$</span>coef </span></code></pre></div>
+<pre><code>##               Estimate Std. Error
+## (Intercept)  0.1346364  0.3332388
+## X1           1.3226155  0.3654287
+## X2          -1.2643476  0.2243754
+## X3           1.1190169  0.1495319
+## X4           1.1292532  0.1450896
+## X5          -1.1448603  0.1468984</code></pre>
+</div>
+<div id="model-selection-1" class="section level3">
+<h3>Model selection</h3>
+<p>To perform model selection with missing values, we adapt criterion
+BIC and step-wise method. The function
+<code>miss.glm.model.select</code> outputs the best model selected. With
+the current implementation, when <span class="math inline">\(p\)</span>
+is greater than 20, it may encounter computational difficulties for the
+BIC based model selection. In the following simulation, we add a null
+variable with missing values to check if the function can distinguish it
+from the true variables.</p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" tabindex="-1"></a><span class="co"># Add null variable with NA</span></span>
+<span id="cb42-2"><a href="#cb42-2" tabindex="-1"></a>X.null <span class="ot">&lt;-</span> <span class="fu">mvrnorm</span>(n, <span class="dv">1</span>, <span class="dv">1</span>)</span>
+<span id="cb42-3"><a href="#cb42-3" tabindex="-1"></a>patterns <span class="ot">&lt;-</span> <span class="fu">runif</span>(n)<span class="sc">&lt;</span><span class="fl">0.10</span> <span class="co"># missing completely at random</span></span>
+<span id="cb42-4"><a href="#cb42-4" tabindex="-1"></a>X.null[patterns] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb42-5"><a href="#cb42-5" tabindex="-1"></a>X.obs.null <span class="ot">&lt;-</span> <span class="fu">cbind.data.frame</span>(X.obs, X.null)</span>
+<span id="cb42-6"><a href="#cb42-6" tabindex="-1"></a></span>
+<span id="cb42-7"><a href="#cb42-7" tabindex="-1"></a><span class="co"># Without model selection</span></span>
+<span id="cb42-8"><a href="#cb42-8" tabindex="-1"></a>df.obs.null <span class="ot">=</span> <span class="fu">data.frame</span>(y, X.obs.null)</span>
+<span id="cb42-9"><a href="#cb42-9" tabindex="-1"></a>miss.list.null <span class="ot">=</span> <span class="fu">miss.glm</span>(y<span class="sc">~</span>., <span class="at">data =</span> df.obs.null)</span></code></pre></div>
+<pre><code>## Iteration of SAEM: 
+## 50... 100... 150... 200... 250... 300... 350...</code></pre>
+<div class="sourceCode" id="cb44"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb44-1"><a href="#cb44-1" tabindex="-1"></a><span class="fu">print</span>(miss.list.null)</span></code></pre></div>
+<pre><code>## 
+## Call:  miss.glm(formula = y ~ ., data = df.obs.null)
+## 
+## Coefficients:
+## (Intercept)           X1           X2           X3           X4           X5  
+##      0.2018       1.3598      -1.2953       1.1489       1.1506      -1.1632  
+##      X.null  
+##     -0.1098  
+## Standard error estimates:
+## (Intercept)           X1           X2           X3           X4           X5  
+##      0.3832       0.3698       0.2261       0.1493       0.1454       0.1461  
+##      X.null  
+##      0.1892  
+## Log-likelihood: -173.4</code></pre>
+<div class="sourceCode" id="cb46"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb46-1"><a href="#cb46-1" tabindex="-1"></a><span class="co"># model selection for SAEM</span></span>
+<span id="cb46-2"><a href="#cb46-2" tabindex="-1"></a>miss.model <span class="ot">=</span> <span class="fu">miss.glm.model.select</span>(y, X.obs.null)</span>
+<span id="cb46-3"><a href="#cb46-3" tabindex="-1"></a><span class="fu">print</span>(miss.model)</span></code></pre></div>
+<pre><code>## 
+## Call:  miss.glm(formula = Y ~ ., data = df, print_iter = FALSE, subsets = subset_choose)
+## 
+## Coefficients:
+## (Intercept)           X1           X2           X3           X4           X5  
+##      0.1287       1.3623      -1.2932       1.1368       1.1483      -1.1635  
+## Standard error estimates:
+## (Intercept)           X1           X2           X3           X4           X5  
+##      0.3330       0.3640       0.2220       0.1469       0.1442       0.1450  
+## Log-likelihood: -171.6</code></pre>
+</div>
+<div id="prediction-on-test-set-1" class="section level3">
+<h3>Prediction on test set</h3>
+<p>In order to evaluate the prediction performance, we generate a test
+set of size <span class="math inline">\(nt = 100\)</span> times <span class="math inline">\(p = 5\)</span> following the same distribution as
+the design matrix, and without and with 10% of missing values. We
+evaluate the prediction quality with a confusion matrix.</p>
+<div class="sourceCode" id="cb48"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb48-1"><a href="#cb48-1" tabindex="-1"></a><span class="co"># Generate test set with missingness</span></span>
+<span id="cb48-2"><a href="#cb48-2" tabindex="-1"></a><span class="fu">set.seed</span>(<span class="dv">200</span>)</span>
+<span id="cb48-3"><a href="#cb48-3" tabindex="-1"></a>nt <span class="ot">=</span> <span class="dv">100</span></span>
+<span id="cb48-4"><a href="#cb48-4" tabindex="-1"></a>X.test <span class="ot">&lt;-</span> <span class="fu">matrix</span>(<span class="fu">rnorm</span>(nt<span class="sc">*</span>p), <span class="at">nrow=</span>nt)<span class="sc">%*%</span><span class="fu">chol</span>(Sigma.star)<span class="sc">+</span></span>
+<span id="cb48-5"><a href="#cb48-5" tabindex="-1"></a>          <span class="fu">matrix</span>(<span class="fu">rep</span>(mu.star,nt), <span class="at">nrow =</span> nt, <span class="at">byrow =</span> <span class="cn">TRUE</span>)</span>
+<span id="cb48-6"><a href="#cb48-6" tabindex="-1"></a></span>
+<span id="cb48-7"><a href="#cb48-7" tabindex="-1"></a><span class="co"># Generate the test set</span></span>
+<span id="cb48-8"><a href="#cb48-8" tabindex="-1"></a>p1 <span class="ot">&lt;-</span> <span class="dv">1</span><span class="sc">/</span>(<span class="dv">1</span><span class="sc">+</span><span class="fu">exp</span>(<span class="sc">-</span>X.test<span class="sc">%*%</span>beta.star<span class="sc">-</span>beta0.star))</span>
+<span id="cb48-9"><a href="#cb48-9" tabindex="-1"></a>y.test <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(<span class="fu">runif</span>(nt)<span class="sc">&lt;</span>p1)</span>
+<span id="cb48-10"><a href="#cb48-10" tabindex="-1"></a></span>
+<span id="cb48-11"><a href="#cb48-11" tabindex="-1"></a><span class="co"># Generate missingness on test set</span></span>
+<span id="cb48-12"><a href="#cb48-12" tabindex="-1"></a>p.miss <span class="ot">&lt;-</span> <span class="fl">0.10</span></span>
+<span id="cb48-13"><a href="#cb48-13" tabindex="-1"></a>X.test[<span class="fu">runif</span>(nt<span class="sc">*</span>p)<span class="sc">&lt;</span>p.miss] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb48-14"><a href="#cb48-14" tabindex="-1"></a></span>
+<span id="cb48-15"><a href="#cb48-15" tabindex="-1"></a><span class="co"># Prediction on test set</span></span>
+<span id="cb48-16"><a href="#cb48-16" tabindex="-1"></a>pr.saem <span class="ot">&lt;-</span> <span class="fu">predict</span>(miss.list, <span class="fu">data.frame</span>(X.test))</span>
+<span id="cb48-17"><a href="#cb48-17" tabindex="-1"></a></span>
+<span id="cb48-18"><a href="#cb48-18" tabindex="-1"></a><span class="co"># Confusion matrix</span></span>
+<span id="cb48-19"><a href="#cb48-19" tabindex="-1"></a>pred.saem <span class="ot">=</span> (pr.saem<span class="sc">&gt;</span><span class="fl">0.5</span>)<span class="sc">*</span><span class="dv">1</span></span>
+<span id="cb48-20"><a href="#cb48-20" tabindex="-1"></a><span class="fu">table</span>(y.test,pred.saem )</span></code></pre></div>
+<pre><code>##       pred.saem
+## y.test  0  1
+##      0 34  8
+##      1  6 52</code></pre>
+</div>
+</div>
+<div id="reference" class="section level2">
+<h2>Reference</h2>
+<p>Logistic Regression with Missing Covariates – Parameter Estimation,
+Model Selection and Prediction (2020, Jiang W., Josse J., Lavielle M.,
+TraumaBase Group), <a href="https://doi.org/10.1016/j.csda.2019.106907">Computational
+Statistics &amp; Data Analysis</a>.</p>
+</div>
+
+
+
+<!-- code folding -->
+
+
+<!-- dynamically load mathjax for compatibility with self-contained -->
+<script>
+  (function () {
+    var script = document.createElement("script");
+    script.type = "text/javascript";
+    script.src  = "https://mathjax.rstudio.com/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML";
+    document.getElementsByTagName("head")[0].appendChild(script);
+  })();
+</script>
+
+</body>
+</html>
