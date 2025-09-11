@@ -12,7 +12,7 @@
 
 <meta name="author" content="Wei Jiang, Christophe Muller" />
 
-<meta name="date" content="2025-09-06" />
+<meta name="date" content="2025-09-11" />
 
 <title>Linear regression and logistic regression with missing covariates</title>
 
@@ -341,7 +341,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <h1 class="title toc-ignore">Linear regression and logistic regression
 with missing covariates</h1>
 <h4 class="author">Wei Jiang, Christophe Muller</h4>
-<h4 class="date">2025-09-06</h4>
+<h4 class="date">2025-09-11</h4>
 
 
 
@@ -552,11 +552,11 @@ from the true variables.</p>
 ## 
 ## Coefficients:
 ## (Intercept)           X1           X2       X.null  
-##     1.92281      3.07431     -1.01380     -0.05101  
+##     1.92234      3.07508     -1.01361     -0.05098  
 ## Standard error estimates:
 ## (Intercept)           X1           X2       X.null  
-##     0.05204      0.03822      0.02110      0.02745  
-## Log-likelihood: 7.916</code></pre>
+##     0.05191      0.03725      0.02092      0.02717  
+## Log-likelihood: 8.393</code></pre>
 <div class="sourceCode" id="cb23"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" tabindex="-1"></a><span class="co"># Model selection</span></span>
 <span id="cb23-2"><a href="#cb23-2" tabindex="-1"></a>miss.model <span class="ot">=</span> <span class="fu">miss.lm.model.select</span>(y, X.obs.null)</span>
 <span id="cb23-3"><a href="#cb23-3" tabindex="-1"></a><span class="fu">print</span>(miss.model)</span></code></pre></div>

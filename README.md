@@ -13,6 +13,7 @@ Now you can install the package **misaem** from CRAN.
 ```{r}
 install.packages("misaem")
  ```
+
 ### Using the misaem package
 Basically,
 
@@ -33,4 +34,4 @@ and Prediction (2020, Jiang W., Josse J., Lavielle M., TraumaBase Group), [Compu
 
 ## Code development
 
-Initially developped on [github.com/wjiang94/misaem](https://github.com/wjiang94/misaem), the project was moved to [github.com/ChristopheMuller/misaem](https://github.com/ChristopheMuller/misaem) as of version 1.1.0.
+The `misaem` package was initially developed by Wei Jiang at [github.com/wjiang94/misaem](https://github.com/wjiang94/misaem). Subsequent development was carried out by Imke Mayer for version 1.0.1 at [github.com/imkemayer/misaem](https://github.com/imkemayer/misaem), and by Christophe Muller for version 1.1.0 at [github.com/ChristopheMuller/misaem](https://github.com/ChristopheMuller/misaem).

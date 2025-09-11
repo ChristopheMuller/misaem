@@ -2,7 +2,7 @@ Package: misaem
 Type: Package
 Version: 1.1.0
 Title: Linear Regression and Logistic Regression with Missing Covariates
-Date: 2025-09-05
+Date: 2025-09-11
 Authors@R: c( person("Wei", "Jiang", role = "aut", email = "wei.jiang@polytechnique.edu"),
               person("Pavlo", "Mozharovskyi", role = "ctb", email = "pavlo.mozharovskyi@telecom-paristech.fr"),
               person("Imke", "Mayer", role = "ctb", email = "mayer.imke@gmail.com"),
@@ -27,3 +27,4 @@ URL: https://github.com/ChristopheMuller/misaem
 BugReports: https://github.com/ChristopheMuller/misaem/issues
 LazyData: true
 RoxygenNote: 7.3.2
+VignetteBuilder: knitr

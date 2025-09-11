@@ -1,11 +1,11 @@
 citHeader("To cite misaem in publications use:")
 
-citEntry(entry = "Article",
+bibentry(bibtype = "Article",
   title        = "Logistic regression with missing covariates—Parameter estimation, model selection and prediction within a joint-modeling framework",
-  author       =  personList(person("Wei", "Jiang"),
-                   as.person("Julie Josse"),
-                   as.person("Marc Lavielle"),
-                   as.person("TraumaBase Group")),
+  author       = c(person("Wei", "Jiang"),
+                   person("Julie", "Josse"),
+                   person("Marc", "Lavielle"),
+                   person("TraumaBase Group")),
   journal      = "Computational Statistics & Data Analysis",
   year         = "2020",
   volume       = "145",
