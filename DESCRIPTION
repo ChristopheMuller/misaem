@@ -23,8 +23,8 @@ Suggests: knitr,
 Description: Estimate parameters of linear regression and logistic regression with missing covariates with missing data, perform model selection and prediction, using EM-type algorithms. Jiang W., Josse J., Lavielle M., TraumaBase Group (2020) <doi:10.1016/j.csda.2019.106907>.
 Encoding: UTF-8
 License: GPL-3
-URL: https://github.com/ChristopheMuller/misaem
-BugReports: https://github.com/ChristopheMuller/misaem/issues
+URL: https://github.com/julierennes/misaem
+BugReports: https://github.com/julierennes/misaem/issues
 LazyData: true
 RoxygenNote: 7.3.2
 VignetteBuilder: knitr
